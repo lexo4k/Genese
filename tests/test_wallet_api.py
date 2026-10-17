@@ -43,7 +43,7 @@ class WalletCoreTests(unittest.TestCase):
                 ("u1", "teste@example.com", "00" * 16, "00" * 32, 100)
             )
             db.execute(
-                "INSERT INTO ledger VALUES (?,?,?,?,?,?,?,?,?)",
+                "INSERT INTO ledger VALUES (?,?,?,?,?,?,?,?)",
                 ("tx1", "u1", 5000, "credit", "pending", "ref1", "Cobrança pendente", 101)
             )
             summary = wallet_api.wallet_summary(db, "u1")
@@ -57,11 +57,11 @@ class WalletCoreTests(unittest.TestCase):
                 ("u1", "teste@example.com", "00" * 16, "00" * 32, 100)
             )
             db.execute(
-                "INSERT INTO ledger VALUES (?,?,?,?,?,?,?,?,?)",
+                "INSERT INTO ledger VALUES (?,?,?,?,?,?,?,?)",
                 ("tx1", "u1", 1250, "credit", "confirmed", "ref1", "Crédito confirmado", 101)
             )
             db.execute(
-                "INSERT INTO ledger VALUES (?,?,?,?,?,?,?,?,?)",
+                "INSERT INTO ledger VALUES (?,?,?,?,?,?,?,?)",
                 ("tx2", "u1", 200, "debit", "confirmed", "ref2", "Débito confirmado", 102)
             )
             summary = wallet_api.wallet_summary(db, "u1")
@@ -75,12 +75,12 @@ class WalletCoreTests(unittest.TestCase):
                 ("u1", "teste@example.com", "00" * 16, "00" * 32, 100)
             )
             db.execute(
-                "INSERT INTO ledger VALUES (?,?,?,?,?,?,?,?,?)",
+                "INSERT INTO ledger VALUES (?,?,?,?,?,?,?,?)",
                 ("tx1", "u1", 100, "credit", "pending", "same-ref", "A", 101)
             )
             with self.assertRaises(Exception):
                 db.execute(
-                    "INSERT INTO ledger VALUES (?,?,?,?,?,?,?,?,?)",
+                    "INSERT INTO ledger VALUES (?,?,?,?,?,?,?,?)",
                     ("tx2", "u1", 100, "credit", "pending", "same-ref", "B", 102)
                 )
 
