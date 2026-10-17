@@ -1,0 +1,69 @@
+name: GENESE - testes externos
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["**"]
+  schedule:
+    - cron: "17 12 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: genese-public-check
+  cancel-in-progress: true
+
+jobs:
+  executar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Preparar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validar sintaxe
+        run: python -m py_compile genese_autonomo.py
+
+      - name: Executar testes externos e salvar relatório
+        shell: bash
+        run: |
+          set +e
+          GENESE_TIMEOUT=8 GENESE_RETRIES=2 python -u genese_autonomo.py --json > genese_report.json
+          code=$?
+          echo "GENESE_EXIT_CODE=$code" >> "$GITHUB_STEP_SUMMARY"
+          cat genese_report.json
+          exit "$code"
+
+      - name: Resumo
+        if: always()
+        shell: bash
+        run: |
+          echo "## GÊNESE: resultado" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f genese_report.json ]; then
+            python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          p=json.load(open("genese_report.json", encoding="utf-8"))
+          r=p.get("resumo", {})
+          print(f"- DNS: {r.get('dns_ok', 0)}/{r.get('dns_total', 0)}")
+          print(f"- HTTPS externo: {r.get('https_ok', False)}")
+          print(f"- Catálogo público: {r.get('catalogo_publico_ok', False)}")
+          print(f"- API de câmbio: {r.get('cambio_ok', False)}")
+          print(f"- Conectividade externa confirmada: {r.get('conectividade_externa_confirmada', False)}")
+          print(f"- Ganhos confirmados: {r.get('ganhos_confirmados', 0)}")
+          PY
+          fi
+
+      - name: Guardar relatório para download
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: genese-relatorio
+          path: genese_report.json
+          if-no-files-found: warn
+          retention-days: 14
