@@ -139,6 +139,19 @@ class APIHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         path = urlparse(self.path).path
+        if path == "/" or path == "/index.html":
+            try:
+                raw = (ROOT / "web" / "index.html").read_bytes()
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Content-Length", str(len(raw)))
+                self.send_header("Cache-Control", "no-store")
+                self.send_header("X-Content-Type-Options", "nosniff")
+                self.end_headers()
+                self.wfile.write(raw)
+                return
+            except OSError:
+                return self.send_json(500, {"error": "Interface web não encontrada"})
         if path == "/health":
             return self.send_json(200, {
                 "ok": True, "service": "GÊNESE Wallet API",
