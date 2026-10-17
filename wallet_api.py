@@ -277,9 +277,10 @@ class APIHandler(BaseHTTPRequestHandler):
                 return self.send_json(401, {"error": "Assinatura de webhook inválida"})
             if str(data.get("type", "")).lower() != "order" and str(data.get("action", "")).lower().startswith("order.") is False:
                 return self.send_json(200, {"ok": True, "ignored": True})
-            order_id = str((data.get("data") or {}).get("id") or resource_id)
-            if not order_id:
-                return self.send_json(400, {"error": "ID de ordem ausente"})
+            body_order_id = str((data.get("data") or {}).get("id") or "")
+            if not resource_id or (body_order_id and body_order_id.lower() != resource_id.lower()):
+                return self.send_json(400, {"error": "ID da ordem não corresponde ao recurso assinado"})
+            order_id = resource_id
             try:
                 remote = fetch_order(order_id)
                 status = payment_state(remote)
