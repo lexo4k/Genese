@@ -58,8 +58,7 @@ def create_pix_order(amount_cents: int, email: str, external_reference: str, des
         "processing_mode": "automatic",
         "external_reference": external_reference,
         "total_amount": f"{amount_cents / 100:.2f}",
-        "description": description[:120],
-        "payer": {"email": email, "first_name": "APRO"},
+        "payer": {"email": "test_user_br@testuser.com", "first_name": "APRO"},
         "transactions": {
             "payments": [{
                 "amount": f"{amount_cents / 100:.2f}",
