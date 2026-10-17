@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101827">
+<title>GÊNESE | Carteira</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#eef3ff;background:#101827}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at top right,#253a61,#101827 55%)}main{max-width:760px;margin:auto;padding:24px 16px 48px}.brand{font-size:13px;letter-spacing:.22em;color:#9cb8ff;font-weight:800}.hero{padding:20px 0}.hero h1{font-size:clamp(30px,7vw,48px);margin:8px 0}.muted{color:#aab7cf;line-height:1.5}.card{background:#18243a;border:1px solid #30415f;border-radius:18px;padding:18px;margin:14px 0;box-shadow:0 12px 30px #0002}.balance{font-size:clamp(32px,8vw,44px);font-weight:800;letter-spacing:-.04em;margin:8px 0}.tag{display:inline-block;border-radius:999px;padding:6px 10px;background:#473719;color:#ffd783;font-size:12px;font-weight:700}label{display:block;margin:12px 0 6px;color:#cbd6ea;font-size:14px}input{width:100%;padding:13px;border-radius:10px;border:1px solid #465875;background:#101827;color:white;font:inherit}button{padding:12px 16px;border:0;border-radius:10px;background:#a8c4ff;color:#0b1730;font-weight:800;font:inherit;cursor:pointer;margin:8px 8px 0 0}button.secondary{background:#2b3d5c;color:#edf3ff}button:disabled{opacity:.45;cursor:not-allowed}.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.notice{border-left:3px solid #ffc75d;padding:10px 12px;background:#2a2b2b;border-radius:8px;color:#f5dfac;font-size:13px;line-height:1.5}pre{white-space:pre-wrap;word-break:break-word;background:#0b1220;padding:12px;border-radius:10px;color:#c9d9f7;min-height:42px}ul{padding-left:20px;color:#c8d5eb;line-height:1.7}.hidden{display:none}@media(max-width:520px){.row{grid-template-columns:1fr}}
+</style>
+</head>
+<body><main>
+<div class="brand">GÊNESE / FINTECH MVP</div>
+<header class="hero"><h1>Sua carteira, com transparência.</h1><p class="muted">Contas de usuário, extrato e saldo contábil interno. O Pix real permanece desligado até a conexão com um provedor financeiro autorizado.</p></header>
+<div class="notice"><strong>Ambiente de desenvolvimento.</strong> Esta versão não guarda dinheiro real, não recebe depósitos e não envia Pix. O saldo exibido é apenas o registro interno da aplicação.</div>
+<section id="auth" class="card">
+<h2>Entrar ou criar conta</h2>
+<label for="email">E-mail</label><input id="email" type="email" autocomplete="email" maxlength="254" placeholder="voce@exemplo.com">
+<label for="password">Senha (mínimo 12 caracteres)</label><input id="password" type="password" autocomplete="current-password" minlength="12" maxlength="256">
+<button id="login">Entrar</button><button id="register" class="secondary">Criar conta</button>
+<p class="muted">Use uma senha exclusiva para testes. Não reutilize a senha do banco ou do e-mail.</p>
+</section>
+<section id="account" class="hidden">
+<div class="card"><span class="tag">LEDGER-ONLY · PIX DESATIVADO</span><p class="muted">Saldo contábil interno</p><div class="balance" id="balance">R$ 0,00</div><p class="muted" id="accountEmail"></p><button id="refresh">Atualizar</button><button id="logout" class="secondary">Sair</button></div>
+<div class="card"><h2>Operações</h2><button disabled title="Requer provedor de pagamento configurado">Receber Pix · indisponível</button><button disabled title="Requer provedor de pagamento configurado">Enviar Pix · indisponível</button><p class="muted">Os botões permanecem desativados para não sugerir que pagamentos reais funcionam.</p></div>
+<div class="card"><h2>Extrato</h2><ul id="transactions"><li>Nenhuma transação registrada.</li></ul></div>
+</section>
+<div class="card"><h2>Estado do serviço</h2><pre id="status">Verificando API...</pre></div>
+<footer class="muted"><small>GÊNESE Wallet · Não é uma instituição financeira nem uma conta bancária. Não deposite dinheiro nesta versão.</small></footer>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+let token = sessionStorage.getItem("genese_token") || "";
+function money(cents){return new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format((Number(cents)||0)/100)}
+async function api(path, body, method="POST"){
+ const headers={"Content-Type":"application/json"};
+ if(token) headers.Authorization="Bearer "+token;
+ const response=await fetch(path,{method,headers,body:body===undefined?undefined:JSON.stringify(body)});
+ const data=await response.json().catch(()=>({error:"Resposta inválida da API"}));
+ if(!response.ok) throw new Error(data.detail||data.error||("HTTP "+response.status));
+ return data;
+}
+function showError(err){$("status").textContent="Erro: "+err.message}
+async function refresh(){
+ const [me,wallet,tx]=await Promise.all([api("/api/me",undefined,"GET"),api("/api/wallet",undefined,"GET"),api("/api/transactions",undefined,"GET")]);
+ $("accountEmail").textContent=me.user.email;
+ $("balance").textContent=money(wallet.wallet.balance_cents);
+ const list=$("transactions");list.replaceChildren();
+ if(!tx.transactions.length){const li=document.createElement("li");li.textContent="Nenhuma transação registrada.";list.append(li)}
+ for(const item of tx.transactions){const li=document.createElement("li");li.textContent=new Date(item.created_at*1000).toLocaleString("pt-BR")+" · "+item.description+" · "+money(item.amount_cents)+" · "+item.status;list.append(li)}
+ $("auth").classList.add("hidden");$("account").classList.remove("hidden");
+ $("status").textContent="API autenticada. Carteira contábil interna; Pix real desativado.";
+}
+async function auth(endpoint){
+ try{
+  const data=await api(endpoint,{email:$("email").value,password:$("password").value});
+  if(data.token){token=data.token;sessionStorage.setItem("genese_token",token);await refresh()}
+  else $("status").textContent=data.message||"Conta criada. Agora entre para acessar a carteira.";
+ }catch(e){showError(e)}
+}
+$("login").onclick=()=>auth("/api/login");
+$("register").onclick=()=>auth("/api/register");
+$("refresh").onclick=()=>refresh().catch(showError);
+$("logout").onclick=async()=>{try{await api("/api/logout",{})}catch(e){} token="";sessionStorage.removeItem("genese_token");$("account").classList.add("hidden");$("auth").classList.remove("hidden");$("status").textContent="Sessão encerrada."};
+fetch("/health").then(r=>r.json()).then(d=>{$("status").textContent=JSON.stringify(d,null,2)}).catch(e=>{$("status").textContent="API indisponível. Inicie wallet_api.py e abra a interface pelo mesmo servidor."});
+if(token) refresh().catch(e=>{token="";sessionStorage.removeItem("genese_token");showError(e)});
+</script></body></html>
