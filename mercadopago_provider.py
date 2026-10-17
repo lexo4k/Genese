@@ -5,6 +5,7 @@ import hashlib
 import hmac
 import json
 import os
+import urllib.parse
 import urllib.error
 import urllib.request
 import uuid
