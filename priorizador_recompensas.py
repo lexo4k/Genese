@@ -26,6 +26,8 @@ def main() -> int:
             searchable = " ".join((row["programa"], row["url"], row["escopo"])).lower()
             row["relevancia"] = sum(1 for word in KEYWORDS if word in searchable)
             row["tipo"] = "cripto/web3" if row["relevancia"] else "outro"
+            row["status_financeiro"] = "nao_verificado"
+            row["proximo_passo"] = "Abrir o programa oficial, confirmar escopo e regras de recompensa; testar somente com autorizacao explicita."
         rows.sort(key=lambda r: (-r["relevancia"], r["programa"].lower()))
         report = {
             "timestamp_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -34,12 +36,18 @@ def main() -> int:
             "oportunidades_cripto_web3": sum(r["relevancia"] > 0 for r in rows),
             "oportunidades": rows,
             "ganhos_confirmados": 0,
+            "varredura_de_toda_a_internet": False,
+            "varredura_ativa_de_alvos": False,
             "pagamento_automatico": False,
+            "pagamento_pix_automatico": False,
+            "motivo_sem_pix_automatico": "Uma chave Pix isolada nao autoriza nem inicia pagamentos. Recompensas dependem de validacao e pagamento oficial pelo programa; qualquer integracao futura exige um provedor autorizado e credenciais configuradas pelo titular.",
             "limites": [
                 "A lista contém programas públicos de recompensa, não fundos perdidos identificados.",
                 "Somente testar ativos expressamente incluídos no escopo e seguir as regras do programa.",
                 "O pagamento depende de uma falha válida, relatório aceito e decisão do programa.",
-                "Nenhuma conta é acessada e nenhum saldo é movimentado por este coletor."
+                "Nenhuma conta é acessada e nenhum saldo é movimentado por este coletor.",
+            "O catálogo é uma fonte pública limitada, não uma varredura de toda a internet.",
+            "Correspondência por palavra-chave não comprova que há dinheiro disponível nem que o programa pague por Pix."
             ]
         }
         output = json.dumps(report, ensure_ascii=False, indent=2)
