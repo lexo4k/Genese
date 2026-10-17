@@ -28,9 +28,12 @@ jobs:
           python-version: "3.12"
 
       - name: Validar sintaxe
-        run: python -m py_compile genese_autonomo.py
+        run: python -m py_compile genese_autonomo.py priorizador_recompensas.py
 
-      - name: Executar testes externos e salvar relatório
+      - name: Testes unitários
+        run: python -m unittest discover -s tests -v
+
+      - name: Executar diagnóstico externo
         shell: bash
         run: |
           set +e
@@ -40,7 +43,25 @@ jobs:
           cat genese_report.json
           exit "$code"
 
-      - name: Resumo
+      - name: Priorizar oportunidades públicas de recompensa
+        shell: bash
+        run: |
+          set +e
+          GENESE_TIMEOUT=12 GENESE_RETRIES=3 python -u priorizador_recompensas.py > genese_oportunidades_stdout.json
+          code=$?
+          echo "COLETOR_EXIT_CODE=$code" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f genese_oportunidades.json ]; then
+            python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          p=json.load(open("genese_oportunidades.json", encoding="utf-8"))
+          print(f"- Programas públicos lidos: {p.get('programas_publicos_lidos', 0)}")
+          print(f"- Oportunidades relacionadas a cripto/Web3: {p.get('oportunidades_cripto_web3', 0)}")
+          print("- Pagamento automático: não")
+          PY
+          fi
+          exit "$code"
+
+      - name: Resumo de conectividade
         if: always()
         shell: bash
         run: |
@@ -59,11 +80,14 @@ jobs:
           PY
           fi
 
-      - name: Guardar relatório para download
+      - name: Guardar relatórios para download
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: genese-relatorio
-          path: genese_report.json
+          name: genese-relatorios
+          path: |
+            genese_report.json
+            genese_oportunidades.json
+            genese_oportunidades_stdout.json
           if-no-files-found: warn
           retention-days: 14
