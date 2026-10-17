@@ -13,9 +13,10 @@ import os
 import secrets
 import sqlite3
 import time
+from urllib.parse import parse_qs, urlparse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import urlparse
+from mercadopago_provider import MercadoPagoError, create_pix_order, fetch_order, verify_webhook_signature, payment_state
 
 ROOT = Path(__file__).resolve().parent
 DB_PATH = Path(os.environ.get("GENESE_DB_PATH", ROOT / "genese_wallet.sqlite3"))
@@ -61,6 +62,20 @@ def init_db():
             created_at INTEGER NOT NULL
         );
         CREATE INDEX IF NOT EXISTS ledger_user_time ON ledger(user_id, created_at DESC);
+        CREATE TABLE IF NOT EXISTS pix_charges (
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL REFERENCES users(id),
+            provider_order_id TEXT NOT NULL UNIQUE,
+            amount_cents INTEGER NOT NULL CHECK(amount_cents > 0),
+            status TEXT NOT NULL CHECK(status IN ('pending','approved','rejected','cancelled','expired','unknown')),
+            description TEXT NOT NULL,
+            pix_copy_paste TEXT,
+            qr_code_base64 TEXT,
+            ticket_url TEXT,
+            created_at INTEGER NOT NULL,
+            updated_at INTEGER NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS pix_charges_user_time ON pix_charges(user_id, created_at DESC);
         """)
 
 
@@ -155,8 +170,10 @@ class APIHandler(BaseHTTPRequestHandler):
         if path == "/health":
             return self.send_json(200, {
                 "ok": True, "service": "GÊNESE Wallet API",
-                "mode": "ledger-only", "real_money_enabled": False,
-                "pix_enabled": False
+                "mode": "merchant-checkout-sandbox" if os.environ.get("MP_MODE", "sandbox").lower() == "sandbox" and os.environ.get("MP_ACCESS_TOKEN") else "ledger-only",
+                "real_money_enabled": False,
+                "pix_enabled": bool(os.environ.get("MP_ACCESS_TOKEN")) and os.environ.get("MP_MODE", "sandbox").lower() == "sandbox",
+                "provider": "mercadopago" if os.environ.get("MP_ACCESS_TOKEN") and os.environ.get("MP_MODE", "sandbox").lower() == "sandbox" else None
             })
         with connect_db() as db:
             user = self.current_user(db)
@@ -172,6 +189,28 @@ class APIHandler(BaseHTTPRequestHandler):
                     FROM ledger WHERE user_id=? ORDER BY created_at DESC LIMIT 100
                 """, (user["id"],)).fetchall()
                 return self.send_json(200, {"transactions": [dict(row) for row in rows]})
+            if path == "/api/pix/charges":
+                rows = db.execute("""
+                    SELECT id, provider_order_id, amount_cents, status, description,
+                           pix_copy_paste, qr_code_base64, ticket_url, created_at, updated_at
+                    FROM pix_charges WHERE user_id=? ORDER BY created_at DESC LIMIT 50
+                """, (user["id"],)).fetchall()
+                return self.send_json(200, {"charges": [dict(row) for row in rows]})
+            if path.startswith("/api/pix/charges/"):
+                charge_id = path.rsplit("/", 1)[-1]
+                charge = db.execute("SELECT * FROM pix_charges WHERE id=? AND user_id=?", (charge_id, user["id"])).fetchone()
+                if not charge:
+                    return self.send_json(404, {"error": "Cobrança não encontrada"})
+                try:
+                    remote = fetch_order(charge["provider_order_id"])
+                    status = payment_state(remote)
+                    db.execute("UPDATE pix_charges SET status=?, updated_at=? WHERE id=?",
+                               (status, int(time.time()), charge_id))
+                    charge = db.execute("SELECT * FROM pix_charges WHERE id=?", (charge_id,)).fetchone()
+                except MercadoPagoError:
+                    pass
+                return self.send_json(200, {"charge": dict(charge), "wallet_credit": False,
+                                            "note": "Cobrança de comerciante; não representa saldo pessoal nem credita a carteira."})
         return self.send_json(404, {"error": "Rota não encontrada"})
 
     def do_POST(self):
@@ -228,16 +267,71 @@ class APIHandler(BaseHTTPRequestHandler):
                     "warning": "Carteira contábil apenas; pagamentos reais não estão conectados."
                 })
 
-        if path in ("/api/pix/charge", "/api/pix/transfer"):
+        if path == "/api/webhooks/mercadopago":
+            signature = self.headers.get("x-signature", "")
+            request_id = self.headers.get("x-request-id", "")
+            query = parse_qs(urlparse(self.path).query)
+            resource_id = (query.get("data.id") or query.get("id") or [""])[0]
+            if not verify_webhook_signature(signature, request_id, resource_id,
+                                            os.environ.get("MP_WEBHOOK_SECRET", "")):
+                return self.send_json(401, {"error": "Assinatura de webhook inválida"})
+            if str(data.get("type", "")).lower() != "order" and str(data.get("action", "")).lower().startswith("order.") is False:
+                return self.send_json(200, {"ok": True, "ignored": True})
+            order_id = str((data.get("data") or {}).get("id") or resource_id)
+            if not order_id:
+                return self.send_json(400, {"error": "ID de ordem ausente"})
+            try:
+                remote = fetch_order(order_id)
+                status = payment_state(remote)
+                with connect_db() as db:
+                    db.execute("UPDATE pix_charges SET status=?, updated_at=? WHERE provider_order_id=?",
+                               (status, int(time.time()), order_id))
+                return self.send_json(200, {"ok": True, "status": status})
+            except MercadoPagoError:
+                return self.send_json(502, {"error": "Não foi possível consultar a ordem no provedor"})
+
+        if path == "/api/pix/charge":
+            with connect_db() as db:
+                user = self.current_user(db)
+                if not user:
+                    return self.send_json(401, {"error": "Autenticação necessária"})
+                if os.environ.get("MP_MODE", "sandbox").lower() != "sandbox":
+                    return self.send_json(503, {"error": "Produção desabilitada nesta versão",
+                        "detail": "Somente sandbox está habilitado até revisão de segurança e autorização do titular da conta de comerciante."})
+                if not os.environ.get("MP_ACCESS_TOKEN"):
+                    return self.send_json(503, {"error": "Provedor não configurado",
+                        "detail": "Defina MP_ACCESS_TOKEN como secret no servidor e mantenha MP_MODE=sandbox."})
+                amount = data.get("amount_cents")
+                description = str(data.get("description", "Cobrança GÊNESE")).strip()[:120]
+                if isinstance(amount, bool) or not isinstance(amount, int) or amount < 100 or amount > 1000000:
+                    return self.send_json(400, {"error": "amount_cents deve ser um inteiro entre 100 e 1000000 (R$ 1 a R$ 10.000)."})
+                charge_id = secrets.token_urlsafe(18)
+                try:
+                    remote = create_pix_order(amount_cents=amount, email=user["email"],
+                                              external_reference=charge_id, description=description)
+                except MercadoPagoError as exc:
+                    return self.send_json(502, {"error": "O provedor recusou ou não concluiu a cobrança", "detail": str(exc)[:300]})
+                payments = ((remote.get("transactions") or {}).get("payments") or [])
+                payment = payments[0] if payments else {}
+                method = payment.get("payment_method") or {}
+                status = payment_state(remote)
+                db.execute("""INSERT INTO pix_charges
+                    (id,user_id,provider_order_id,amount_cents,status,description,pix_copy_paste,qr_code_base64,ticket_url,created_at,updated_at)
+                    VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
+                    (charge_id, user["id"], str(remote.get("id", "")), amount, status, description,
+                     method.get("qr_code"), method.get("qr_code_base64"), method.get("ticket_url"),
+                     int(time.time()), int(time.time())))
+                return self.send_json(201, {"charge": {
+                    "id": charge_id, "provider_order_id": remote.get("id"), "amount_cents": amount,
+                    "status": status, "description": description, "pix_copy_paste": method.get("qr_code"),
+                    "qr_code_base64": method.get("qr_code_base64"), "ticket_url": method.get("ticket_url")
+                }, "wallet_credit": False,
+                    "note": "Cobrança Pix de comerciante em sandbox. Não é transferência entre usuários nem saldo de carteira."})
+
+        if path == "/api/pix/transfer":
             return self.send_json(503, {
-                "error": "Pix não habilitado",
-                "detail": "Nenhum provedor financeiro foi configurado. Esta API não envia Pix nem confirma recebimentos.",
-                "required": [
-                    "contrato/conta de comerciante com provedor compatível",
-                    "credenciais privadas armazenadas como secrets no servidor",
-                    "webhook autenticado e validação de assinatura",
-                    "testes no sandbox do provedor antes de produção"
-                ]
+                "error": "Transferências Pix desabilitadas",
+                "detail": "Este adaptador Mercado Pago é para cobranças de comerciante. Transferências de carteira exigem produto, autorização e controles separados."
             })
 
         if path == "/api/logout":
