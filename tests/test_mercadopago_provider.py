@@ -1,3 +1,4 @@
+import os
 import hashlib
 import hmac
 import unittest
@@ -40,6 +41,20 @@ class MercadoPagoAdapterTests(unittest.TestCase):
         self.assertEqual(payload["payer"]["email"], "test@example.com")
         self.assertNotIn("first_name", payload["payer"])
         self.assertEqual(request.call_args.kwargs["idempotency_key"], hashlib.sha256(b"genese-order:charge-123").hexdigest())
+
+    def test_production_mode_rejects_test_token_before_network(self):
+        with patch.dict(os.environ, {"MP_MODE": "production", "MP_ACCESS_TOKEN": "TEST-fake"}):
+            with patch("mercadopago_provider.urllib.request.urlopen") as urlopen:
+                with self.assertRaises(mp.MercadoPagoError):
+                    mp._request("GET", "/v1/orders/123")
+                urlopen.assert_not_called()
+
+    def test_sandbox_mode_rejects_production_token_before_network(self):
+        with patch.dict(os.environ, {"MP_MODE": "sandbox", "MP_ACCESS_TOKEN": "APP_USR-fake"}):
+            with patch("mercadopago_provider.urllib.request.urlopen") as urlopen:
+                with self.assertRaises(mp.MercadoPagoError):
+                    mp._request("GET", "/v1/orders/123")
+                urlopen.assert_not_called()
 
     def test_invalid_amount_is_rejected_before_network(self):
         with self.assertRaises(mp.MercadoPagoError):
