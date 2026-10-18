@@ -53,6 +53,29 @@ python binance_public.py --symbol ETHUSDT
 
 A cotação pública não é saldo, receita, lucro garantido nem transferência. **O GÊNESE PAY ainda não consulta saldo privado, não negocia, não deposita e não saca fundos.** Não coloque API keys, senhas, seed phrases ou chaves privadas em código, issues ou navegador.
 
+## Binance: consulta privada somente leitura (opcional)
+
+O arquivo `binance_account_readonly.py` faz uma consulta assinada ao endpoint Spot de conta, usando somente uma chave criada com permissão de leitura. Ele não possui rotas para ordens, depósitos, saques ou transferências e não deve ser tratado como mecanismo de geração de renda.
+
+Configure as variáveis no ambiente do seu próprio dispositivo/servidor, sem colocá-las no código, no GitHub, no navegador ou em mensagens:
+
+```bash
+export BINANCE_API_KEY="sua_chave_de_leitura"
+export BINANCE_API_SECRET="seu_segredo"
+python binance_account_readonly.py
+```
+
+No Windows PowerShell, use `$env:BINANCE_API_KEY` e `$env:BINANCE_API_SECRET`. Crie a chave na Binance com a menor permissão necessária, sem habilitar saque nem trading; se a plataforma permitir, restrinja por IP. Nunca compartilhe os valores dessas variáveis. Se não tiver certeza das permissões, não configure a chave.
+
+O retorno mostra apenas ativos Spot com saldo livre ou bloqueado e declara explicitamente que isso não é receita do GÊNESE. A integração é um utilitário separado: o painel ainda não consulta essa conta automaticamente. Os testes usam respostas simuladas e verificam assinatura/validação, não fazem login real nem confirmam um saldo real.
+
+Teste local:
+
+```bash
+python -m unittest discover -s tests -v
+python -m py_compile binance_account_readonly.py
+```
+
 ## Livro de recompensas auditável
 
 O arquivo `registro_recompensas.py` registra oportunidades e acompanha estados como `encontrada`, `aprovada` e `paga`. É um livro contábil local, não uma consulta bancária independente. Só marque uma recompensa como aprovada/paga quando houver evidência oficial correspondente.
