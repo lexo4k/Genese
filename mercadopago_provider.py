@@ -15,12 +15,17 @@ class MercadoPagoError(RuntimeError):
     pass
 
 
-def _request(method: str, path: str, payload: dict | None = None) -> dict:
+def _request(method: str, path: str, payload: dict | None = None, idempotency_key: str | None = None) -> dict:
     token = os.environ.get("MP_ACCESS_TOKEN", "").strip()
+    mode = os.environ.get("MP_MODE", "sandbox").strip().lower()
     if not token:
         raise MercadoPagoError("MP_ACCESS_TOKEN não configurado no servidor")
-    if os.environ.get("MP_MODE", "sandbox").lower() != "sandbox":
-        raise MercadoPagoError("Este adaptador permite apenas MP_MODE=sandbox")
+    if mode not in ("sandbox", "production"):
+        raise MercadoPagoError("MP_MODE deve ser sandbox ou production")
+    if mode == "production" and token.startswith("TEST-"):
+        raise MercadoPagoError("Token de teste não pode ser usado em MP_MODE=production")
+    if mode == "sandbox" and token.startswith("APP_USR-"):
+        raise MercadoPagoError("Token de produção não pode ser usado em MP_MODE=sandbox")
     body = None if payload is None else json.dumps(payload).encode("utf-8")
     request = urllib.request.Request(
         "https://api.mercadopago.com" + path,
@@ -30,7 +35,7 @@ def _request(method: str, path: str, payload: dict | None = None) -> dict:
             "Authorization": "Bearer " + token,
             "Content-Type": "application/json",
             "Accept": "application/json",
-            "X-Idempotency-Key": str(uuid.uuid4()),
+            "X-Idempotency-Key": idempotency_key or str(uuid.uuid4()),
         },
     )
     try:
@@ -52,13 +57,17 @@ def _request(method: str, path: str, payload: dict | None = None) -> dict:
 def create_pix_order(amount_cents: int, email: str, external_reference: str, description: str) -> dict:
     if isinstance(amount_cents, bool) or not isinstance(amount_cents, int) or amount_cents < 100:
         raise MercadoPagoError("Valor inválido")
-    # The test first_name=APRO is the documented test fixture for an approved test order.
+    if not isinstance(email, str) or "@" not in email or len(email) > 254:
+        raise MercadoPagoError("Informe um e-mail válido do pagador")
+    if not isinstance(external_reference, str) or not external_reference or len(external_reference) > 128:
+        raise MercadoPagoError("Referência externa inválida")
+    # Production requests use the actual payer email; no test fixture is injected.
     payload = {
         "type": "online",
         "processing_mode": "automatic",
         "external_reference": external_reference,
         "total_amount": f"{amount_cents / 100:.2f}",
-        "payer": {"email": "test_user_br@testuser.com", "first_name": "APRO"},
+        "payer": {"email": email},
         "transactions": {
             "payments": [{
                 "amount": f"{amount_cents / 100:.2f}",
@@ -66,7 +75,8 @@ def create_pix_order(amount_cents: int, email: str, external_reference: str, des
             }]
         },
     }
-    result = _request("POST", "/v1/orders", payload)
+    idempotency_key = hashlib.sha256(("genese-order:" + external_reference).encode("utf-8")).hexdigest()
+    result = _request("POST", "/v1/orders", payload, idempotency_key=idempotency_key)
     if not result.get("id"):
         raise MercadoPagoError("A resposta do provedor não contém o ID da ordem")
     return result
