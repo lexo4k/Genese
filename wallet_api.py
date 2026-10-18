@@ -168,12 +168,23 @@ class APIHandler(BaseHTTPRequestHandler):
             except OSError:
                 return self.send_json(500, {"error": "Interface web não encontrada"})
         if path == "/health":
+            mode = os.environ.get("MP_MODE", "sandbox").strip().lower()
+            token = os.environ.get("MP_ACCESS_TOKEN", "").strip()
+            configured = bool(token) and mode in ("sandbox", "production")
+            if mode == "production" and token.startswith("TEST-"):
+                configured = False
+            if mode == "sandbox" and token.startswith("APP_USR-"):
+                configured = False
             return self.send_json(200, {
                 "ok": True, "service": "GÊNESE Wallet API",
-                "mode": "merchant-checkout-sandbox" if os.environ.get("MP_MODE", "sandbox").lower() == "sandbox" and os.environ.get("MP_ACCESS_TOKEN") else "ledger-only",
+                "mode": f"merchant-checkout-{mode}" if configured else "ledger-only",
+                "merchant_pix_checkout_enabled": configured,
+                "production_checkout_enabled": configured and mode == "production",
                 "real_money_enabled": False,
-                "pix_enabled": bool(os.environ.get("MP_ACCESS_TOKEN")) and os.environ.get("MP_MODE", "sandbox").lower() == "sandbox",
-                "provider": "mercadopago" if os.environ.get("MP_ACCESS_TOKEN") and os.environ.get("MP_MODE", "sandbox").lower() == "sandbox" else None
+                "pix_enabled": configured,
+                "provider": "mercadopago" if configured else None,
+                "wallet_transfers_enabled": False,
+                "note": "Checkout é pagamento ao comerciante; não credita saldo interno nem habilita saques."
             })
         with connect_db() as db:
             user = self.current_user(db)
@@ -296,19 +307,30 @@ class APIHandler(BaseHTTPRequestHandler):
                 user = self.current_user(db)
                 if not user:
                     return self.send_json(401, {"error": "Autenticação necessária"})
-                if os.environ.get("MP_MODE", "sandbox").lower() != "sandbox":
-                    return self.send_json(503, {"error": "Produção desabilitada nesta versão",
-                        "detail": "Somente sandbox está habilitado até revisão de segurança e autorização do titular da conta de comerciante."})
-                if not os.environ.get("MP_ACCESS_TOKEN"):
+                mode = os.environ.get("MP_MODE", "sandbox").strip().lower()
+                access_token = os.environ.get("MP_ACCESS_TOKEN", "").strip()
+                if mode not in ("sandbox", "production"):
+                    return self.send_json(503, {"error": "Modo do provedor inválido",
+                        "detail": "Defina MP_MODE=sandbox ou MP_MODE=production no servidor."})
+                if not access_token:
                     return self.send_json(503, {"error": "Provedor não configurado",
-                        "detail": "Defina MP_ACCESS_TOKEN como secret no servidor e mantenha MP_MODE=sandbox."})
+                        "detail": "Configure MP_ACCESS_TOKEN como secret no servidor."})
+                if mode == "production" and access_token.startswith("TEST-"):
+                    return self.send_json(503, {"error": "Credencial de teste detectada",
+                        "detail": "Não é permitido criar cobranças de produção com token de teste."})
+                if mode == "sandbox" and access_token.startswith("APP_USR-"):
+                    return self.send_json(503, {"error": "Credencial de produção detectada",
+                        "detail": "Não é permitido usar token de produção em modo sandbox."})
+                payer_email = str(data.get("payer_email", "")).strip().lower()
+                if len(payer_email) > 254 or "@" not in payer_email or payer_email.startswith("@") or payer_email.endswith("@"):
+                    return self.send_json(400, {"error": "Informe o e-mail válido de quem vai pagar a cobrança."})
                 amount = data.get("amount_cents")
                 description = str(data.get("description", "Cobrança GÊNESE")).strip()[:120]
                 if isinstance(amount, bool) or not isinstance(amount, int) or amount < 100 or amount > 1000000:
                     return self.send_json(400, {"error": "amount_cents deve ser um inteiro entre 100 e 1000000 (R$ 1 a R$ 10.000)."})
                 charge_id = secrets.token_urlsafe(18)
                 try:
-                    remote = create_pix_order(amount_cents=amount, email=user["email"],
+                    remote = create_pix_order(amount_cents=amount, email=payer_email,
                                               external_reference=charge_id, description=description)
                 except MercadoPagoError as exc:
                     return self.send_json(502, {"error": "O provedor recusou ou não concluiu a cobrança", "detail": str(exc)[:300]})
