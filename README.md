@@ -1,17 +1,20 @@
 # GÊNESE
 
-Monitor de fontes públicas para listar programas de recompensa de segurança, priorizar os que parecem relacionados a cripto/Web3 e produzir relatórios auditáveis.
+Motor de descoberta de oportunidades públicas de receita legítima, com priorização cripto/Web3, relatórios auditáveis e registro de evidências. O sistema identifica pistas e organiza a investigação; não afirma que encontrou dinheiro nem garante ganhos.
 
-## Fluxo atual
+## Descoberta autônoma
 
-1. Diagnostica DNS e HTTPS para fontes públicas configuradas.
-2. Lê um catálogo público de programas que declaram oferecer recompensas.
-3. Prioriza registros por correspondência textual com termos de cripto/Web3.
-4. Gera um relatório JSON com links oficiais, escopo publicado e próximos passos.
-5. Registra explicitamente que receitas, saldos e pagamentos permanecem não confirmados.
-6. Mantém a carteira em modo contábil/sandbox, sem afirmar que há dinheiro real disponível.
+O `motor_receita.py` reúne um diretório de programas de bug bounty e issues públicas do GitHub que mencionam recompensa/valor. Deduplica links, prioriza sinais relacionados a cripto/Web3 e salva um relatório JSON. Uma menção a recompensa é apenas uma pista: confira a fonte oficial, regras, escopo, elegibilidade e se a oferta continua ativa.
 
-## Executar
+```bash
+python motor_receita.py
+python motor_receita.py --json
+python motor_receita.py --output relatorio.json --json
+```
+
+O relatório padrão é salvo como `genese_receita.json`.
+
+## Diagnóstico e priorização
 
 Requisitos: Python 3.10+ e `curl`.
 
@@ -19,14 +22,13 @@ Requisitos: Python 3.10+ e `curl`.
 python genese_autonomo.py --json
 python priorizador_recompensas.py > oportunidades.json
 python -m unittest discover -s tests -v
-python -m unittest test_registro_recompensas -v
 ```
 
-O fluxo GitHub Actions compila o código e executa os testes. O relatório produzido localmente é `genese_oportunidades.json`. O livro de recompensas usa `recompensas_registro.json` (ou o caminho indicado por `--db`).
+O diagnóstico verifica DNS/HTTPS, lê um catálogo público limitado e consulta a cotação USD/BRL. O priorizador organiza programas por correspondência textual com termos de cripto/Web3. Nenhuma dessas operações comprova uma falha, direito a recompensa ou pagamento.
 
 ## Binance: cotação pública (somente leitura)
 
-O arquivo `binance_public.py` consulta a API pública Spot sem chave de API e sem entrar em conta privada. Para consultar o preço atual retornado pela Binance:
+O arquivo `binance_public.py` consulta a API pública Spot sem chave de API e sem entrar em conta privada:
 
 ```bash
 python binance_public.py --symbol BTCUSDT
@@ -34,33 +36,24 @@ python binance_public.py --symbol ETHUSDT
 python -m unittest -v test_binance_public
 ```
 
-A resposta contém campos explícitos indicando que cotação não é saldo, receita, lucro garantido nem transferência. Esta integração não acessa saldo privado, não negocia e não deposita/saca fundos.
+A cotação pública não é saldo, receita, lucro garantido nem transferência. Esta integração não acessa saldo privado, não negocia e não deposita/saca fundos.
 
 ## Livro de recompensas auditável
 
-O arquivo `registro_recompensas.py` registra oportunidades e acompanha os estados `encontrada`, `aprovada` e `paga`. Ele não acessa banco, corretora ou carteira e não envia transações.
+O arquivo `registro_recompensas.py` registra oportunidades e acompanha os estados `encontrada`, `aprovada` e `paga`. É um livro contábil local, não uma consulta bancária independente.
 
 ```bash
-# Registrar uma oportunidade pública
 python registro_recompensas.py adicionar --titulo "Programa público" --url https://example.org/security
-
-# Registrar aprovação oficial (substitua o ID e a evidência pelos dados reais)
-python registro_recompensas.py aprovar --id 1 --valor 25 --moeda BRL --evidencia-url https://example.org/approval
-
-# Só depois de receber, registrar evidência oficial do pagamento
-python registro_recompensas.py pagar --id 1 --evidencia-url https://example.org/payment
 python registro_recompensas.py resumo
 ```
 
-O total do resumo é um registro informado pelo operador, não uma consulta bancária independente. O programa exige URLs HTTPS e estados coerentes, mas não consegue provar sozinho que uma página é autêntica ou que o dinheiro entrou na conta.
+Só marque uma recompensa como aprovada/paga quando houver evidência oficial correspondente.
 
-## Limites importantes
+## Segurança e limites
 
-- O catálogo é uma fonte pública limitada, não uma varredura de toda a internet.
-- Correspondência por palavra-chave não prova que exista uma falha, dinheiro disponível, elegibilidade ou pagamento por Pix.
-- Qualquer teste técnico deve ser feito somente em ativos explicitamente autorizados e dentro do escopo e das regras publicadas.
-- Não há exploração automática, acesso a contas, retirada de fundos, mineração ou pagamento automático.
-- A carteira interna é apenas um livro contábil. Cobrança de teste e webhook não equivalem a saldo bancário nem habilitam saques.
-- Um pagamento real exige um direito legítimo ao recebimento, confirmação do pagador/provedor e conciliação.
-
-O projeto pode organizar oportunidades legítimas e evidências, mas não pode garantir renda nem fabricar dinheiro a partir de dados públicos.
+- O GÊNESE não explora sistemas, não testa alvos automaticamente, não acessa contas alheias e não retira fundos.
+- Testes de segurança só podem ocorrer em ativos expressamente autorizados e dentro das regras publicadas.
+- Nenhuma senha, seed phrase, chave privada ou API key privada da Binance é necessária.
+- O programa não cria dinheiro do nada. Receita confirmada permanece zero até existir evidência confiável de recebimento.
+- Não há pagamento, Pix, depósito ou saque automático. A carteira interna continua em modo contábil até existir integração legítima, segura e testada com um provedor.
+- A lista pública é limitada e pode conter resultados desatualizados ou não elegíveis. Confirme sempre no site oficial.
