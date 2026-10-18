@@ -84,6 +84,9 @@ jobs:
           fi
           exit "$code"
 
+      - name: Identificar execução real
+        run: echo "Execução GÊNESE iniciada no runner do GitHub Actions" >> "$GITHUB_STEP_SUMMARY"
+
       - name: Resumo de conectividade
         if: always()
         shell: bash
