@@ -28,10 +28,12 @@ jobs:
           python-version: "3.12"
 
       - name: Validar sintaxe
-        run: python -m py_compile genese_autonomo.py priorizador_recompensas.py motor_receita.py
+        run: python -m py_compile genese_autonomo.py priorizador_recompensas.py motor_receita.py genese_pay_web.py binance_public.py registro_recompensas.py
 
       - name: Testes unitários
-        run: python -m unittest discover -s tests -v
+        run: |
+          python -m unittest discover -s tests -v
+          python -m unittest -v test_binance_public
 
       - name: Executar diagnóstico externo
         shell: bash
@@ -60,7 +62,6 @@ jobs:
           PY
           fi
           exit "$code"
-
 
       - name: Descobrir oportunidades públicas de receita
         shell: bash
