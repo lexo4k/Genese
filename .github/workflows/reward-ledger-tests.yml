@@ -1,0 +1,27 @@
+name: Reward ledger tests
+
+on:
+  push:
+    branches:
+      - feature/carteira-financeira-mvp
+  pull_request:
+    branches:
+      - feature/carteira-financeira-mvp
+
+permissions:
+  contents: read
+
+jobs:
+  reward-ledger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile ledger and tests
+        run: python -m py_compile registro_recompensas.py test_registro_recompensas.py
+      - name: Run reward ledger tests
+        run: python -m unittest -v test_registro_recompensas
