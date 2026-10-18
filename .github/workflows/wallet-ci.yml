@@ -24,7 +24,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Compile Python
-        run: python -m compileall -q wallet_api.py mercadopago_provider.py genese_autonomo.py priorizador_recompensas.py genese_value_engine.py tests
+        run: python -m compileall -q wallet_api.py mercadopago_provider.py genese_autonomo.py priorizador_recompensas.py motor_receita.py genese_value_engine.py tests
       - name: Unit tests
         run: python -m unittest discover -s tests -v
       - name: Health smoke test
