@@ -27,7 +27,7 @@ class MercadoPagoAdapterTests(unittest.TestCase):
         self.assertEqual(mp.payment_state({"transactions": {"payments": [{"status": "approved"}]}}), "approved")
 
     @patch("mercadopago_provider._request")
-    def test_pix_order_payload_uses_cents_and_idempotent_request(self, request):
+    def test_pix_order_payload_uses_real_payer_email_and_idempotency_key(self, request):
         request.return_value = {"id": "ord-test", "status": "action_required", "transactions": {"payments": []}}
         result = mp.create_pix_order(1299, "test@example.com", "charge-123", "Teste")
         self.assertEqual(result["id"], "ord-test")
@@ -37,7 +37,9 @@ class MercadoPagoAdapterTests(unittest.TestCase):
         self.assertEqual(args[1], "/v1/orders")
         self.assertEqual(payload["total_amount"], "12.99")
         self.assertEqual(payload["transactions"]["payments"][0]["amount"], "12.99")
-        self.assertEqual(payload["payer"]["first_name"], "APRO")
+        self.assertEqual(payload["payer"]["email"], "test@example.com")
+        self.assertNotIn("first_name", payload["payer"])
+        self.assertEqual(request.call_args.kwargs["idempotency_key"], hashlib.sha256(b"genese-order:charge-123").hexdigest())
 
     def test_invalid_amount_is_rejected_before_network(self):
         with self.assertRaises(mp.MercadoPagoError):
