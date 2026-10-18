@@ -24,6 +24,18 @@ python -m unittest test_registro_recompensas -v
 
 O fluxo GitHub Actions compila o código e executa os testes. O relatório produzido localmente é `genese_oportunidades.json`. O livro de recompensas usa `recompensas_registro.json` (ou o caminho indicado por `--db`).
 
+## Binance: cotação pública (somente leitura)
+
+O arquivo `binance_public.py` consulta a API pública Spot sem chave de API e sem entrar em conta privada. Para consultar o preço atual retornado pela Binance:
+
+```bash
+python binance_public.py --symbol BTCUSDT
+python binance_public.py --symbol ETHUSDT
+python -m unittest -v test_binance_public
+```
+
+A resposta contém campos explícitos indicando que cotação não é saldo, receita, lucro garantido nem transferência. Esta integração não acessa saldo privado, não negocia e não deposita/saca fundos.
+
 ## Livro de recompensas auditável
 
 O arquivo `registro_recompensas.py` registra oportunidades e acompanha os estados `encontrada`, `aprovada` e `paga`. Ele não acessa banco, corretora ou carteira e não envia transações.
