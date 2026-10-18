@@ -19,9 +19,28 @@ Requisitos: Python 3.10+ e `curl`.
 python genese_autonomo.py --json
 python priorizador_recompensas.py > oportunidades.json
 python -m unittest discover -s tests -v
+python -m unittest test_registro_recompensas -v
 ```
 
-O fluxo GitHub Actions compila o código e executa os testes. O relatório produzido localmente é `genese_oportunidades.json`.
+O fluxo GitHub Actions compila o código e executa os testes. O relatório produzido localmente é `genese_oportunidades.json`. O livro de recompensas usa `recompensas_registro.json` (ou o caminho indicado por `--db`).
+
+## Livro de recompensas auditável
+
+O arquivo `registro_recompensas.py` registra oportunidades e acompanha os estados `encontrada`, `aprovada` e `paga`. Ele não acessa banco, corretora ou carteira e não envia transações.
+
+```bash
+# Registrar uma oportunidade pública
+python registro_recompensas.py adicionar --titulo "Programa público" --url https://example.org/security
+
+# Registrar aprovação oficial (substitua o ID e a evidência pelos dados reais)
+python registro_recompensas.py aprovar --id 1 --valor 25 --moeda BRL --evidencia-url https://example.org/approval
+
+# Só depois de receber, registrar evidência oficial do pagamento
+python registro_recompensas.py pagar --id 1 --evidencia-url https://example.org/payment
+python registro_recompensas.py resumo
+```
+
+O total do resumo é um registro informado pelo operador, não uma consulta bancária independente. O programa exige URLs HTTPS e estados coerentes, mas não consegue provar sozinho que uma página é autêntica ou que o dinheiro entrou na conta.
 
 ## Limites importantes
 
