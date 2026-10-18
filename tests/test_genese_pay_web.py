@@ -1,3 +1,4 @@
+import inspect
 import json
 import tempfile
 import unittest
@@ -36,9 +37,11 @@ class GeneSePayDashboardTests(unittest.TestCase):
         self.assertIn("/api/refresh", genese_pay_web.HTML)
         self.assertIn("noopener noreferrer", genese_pay_web.HTML)
 
-    def test_only_localhost_bind_addresses_are_allowed_by_policy(self):
-        self.assertIn("127.0.0.1", genese_pay_web.__doc__ or "")
-        self.assertIn("localhost", genese_pay_web.HTML.lower())
+    def test_server_policy_restricts_binding_to_localhost(self):
+        source = inspect.getsource(genese_pay_web.main)
+        self.assertIn('os.environ.get("GENESE_PAY_HOST", "127.0.0.1")', source)
+        self.assertIn('{"127.0.0.1", "localhost", "::1"}', source)
+        self.assertIn("autenticação e HTTPS", source)
 
 
 if __name__ == "__main__":
