@@ -1,4 +1,4 @@
-"""Mercado Pago Orders API adapter. Sandbox-only by default; no client-side secrets."""
+"""Mercado Pago Orders API adapter; sandbox by default, production by explicit server config."""
 from __future__ import annotations
 
 import hashlib
