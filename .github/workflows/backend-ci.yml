@@ -26,3 +26,20 @@ jobs:
           test -s render.yaml
           grep -q 'GENESE_HOST=0.0.0.0' Dockerfile
           grep -q 'healthCheckPath: /health' render.yaml
+      - name: Build deployment container
+        run: docker build --tag genese-pay-ci .
+      - name: Smoke test container health endpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --detach --rm --name genese-pay-ci -p 10000:10000 genese-pay-ci
+          cleanup() { docker stop genese-pay-ci >/dev/null 2>&1 || true; }
+          trap cleanup EXIT
+          for attempt in {1..20}; do
+            if curl --fail --silent http://127.0.0.1:10000/health > /tmp/genese-health.json; then
+              break
+            fi
+            sleep 1
+          done
+          cat /tmp/genese-health.json
+          python -c "import json; d=json.load(open('/tmp/genese-health.json')); assert d.get('ok') is True"
