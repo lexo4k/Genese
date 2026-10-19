@@ -23,6 +23,14 @@ Em https://github.com/lexo4k/Genese/settings/secrets/actions, configure os quatr
 
 Não coloque a keystore, senhas ou chaves no código, em issues ou em mensagens. Não gere uma keystore descartável para fingir continuidade: se perder a chave, futuras atualizações do mesmo app podem não instalar sobre a versão anterior. Depois de configurar os secrets, execute o workflow **GENESE PAY Android APK and signed release gate** e confirme que o job **Build signed production APK when secrets are configured** e a verificação de assinatura terminam em sucesso. O APK debug não é um APK de produção assinado.
 
+## A Binance precisa estar dentro do aplicativo Android?
+Não. Por segurança, o app Android não deve guardar nem chamar a API privada da Binance diretamente. Há três níveis distintos:
+- **Receber pagamentos de receita legítima:** uma plataforma pagadora pode enviar os fundos para um endereço de depósito Binance verificado; isso pode ser manual e não exige conectar a API privada ao app.
+- **Consultar status/conta automaticamente:** a integração deve ficar no backend HTTPS, com uma API key de leitura guardada como secret no servidor. O app conversa apenas com a API do GÊNESE PAY.
+- **Fazer transferências/saques automáticos:** não está implementado. Exige controles de segurança, limites, validação de ativo e rede, confirmação explícita, monitoramento e testes separados. Não habilite saques apenas para fazer o teste passar.
+
+Nunca compile API keys ou segredos Binance dentro do APK, JavaScript, HTML, logs ou repositório. O app deve funcionar sem credenciais Binance configuradas até existir um fluxo real que necessite delas.
+
 ## Validar credenciais Binance sem movimentar dinheiro
 O script `scripts/binance_readonly_check.py` testa somente a autenticação de leitura do endpoint Spot `GET /api/v3/account`. Não cria ordens, depósitos, transferências ou saques e não imprime saldos nem a URL assinada.
 
