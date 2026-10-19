@@ -38,3 +38,9 @@ O painel permanece preso a `127.0.0.1` por segurança. Não o exponha diretament
 - `genese_autonomo.py` e `priorizador_recompensas.py`: diagnóstico de conectividade e organização de programas públicos de recompensa; encontrar um programa não garante recompensa.
 - `.github/workflows/genese.yml`: verificação automática de sintaxe e integridade do código. Essa automação não representa mineração ou pagamento.
 
+
+## Interface instalável no celular
+
+A interface agora inclui manifesto PWA, ícone SVG e service worker para instalação como atalho de app em navegadores compatíveis. Os arquivos são servidos pelo próprio painel local. O cache é limitado à interface estática; as rotas `/api/` nunca são servidas do cache offline, para evitar exibir dados antigos como se fossem atuais.
+
+**Limite importante:** instalar a interface não instala Python nem um minerador no Android. Para que os controles funcionem, o backend Python precisa estar em execução no mesmo dispositivo e o minerador externo precisa estar instalado e configurado. Este repositório ainda não contém APK Android nativo, não executa mineração por conta própria e não confirma pagamentos/depósitos Binance. O painel continua vinculado a `127.0.0.1` e rejeita POSTs de origens web diferentes.

@@ -23,6 +23,9 @@ PAGE = """<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="dark">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#0b1020">
 <title>GÊNESE PAY</title>
 <style>
 :root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#edf2ff;background:#0b1020}
@@ -90,6 +93,7 @@ async function fetchApi(){
 }
 $('refresh').addEventListener('click',refresh); $('fetchapi').addEventListener('click',fetchApi);
 $('startminer').addEventListener('click',()=>minerAction('start')); $('stopminer').addEventListener('click',()=>minerAction('stop')); refresh(); refreshMiner();
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js').catch(()=>{});
 </script>
 </body></html>"""
 
@@ -109,6 +113,25 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:
         path = urlparse(self.path).path
+        static_files = {"/manifest.webmanifest": ("manifest.webmanifest", "application/manifest+json; charset=utf-8"), "/service-worker.js": ("service-worker.js", "text/javascript; charset=utf-8"), "/icon.svg": ("icon.svg", "image/svg+xml")}
+        if path in static_files:
+            filename, content_type = static_files[path]
+            try:
+                with open(filename, "rb") as asset:
+                    body = asset.read()
+            except OSError:
+                self._json({"ok": False, "error": "static_asset_missing"}, 500)
+                return
+            self.send_response(200)
+            self.send_header("Content-Type", content_type)
+            self.send_header("Content-Length", str(len(body)))
+            self.send_header("Cache-Control", "no-cache")
+            self.send_header("X-Content-Type-Options", "nosniff")
+            if path == "/service-worker.js":
+                self.send_header("Service-Worker-Allowed", "/")
+            self.end_headers()
+            self.wfile.write(body)
+            return
         if path == "/":
             body = PAGE.encode("utf-8")
             self.send_response(200)
@@ -161,6 +184,10 @@ class Handler(BaseHTTPRequestHandler):
         self._json({"ok": False, "error": "not_found"}, 404)
 
     def do_POST(self) -> None:
+        origin = self.headers.get("Origin")
+        if origin and origin != "http://127.0.0.1:" + str(PORT):
+            self._json({"ok": False, "error": "cross_origin_request_rejected"}, 403)
+            return
         path = urlparse(self.path).path
         if path == "/api/miner/start":
             try:
