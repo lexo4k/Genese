@@ -38,6 +38,12 @@ Para uma versão utilizável, é necessário:
 - SHA-256 do APK de teste: `6b04f4b049388062d735c30024d2e8d23bbfa74fd940e5c5774eff38080508e4`.
 - O artefato foi baixado e o ZIP do APK passou na verificação de integridade. Isso confirma a compilação automatizada e a assinatura de debug, não a validação em aparelho, implantação do backend ou prontidão financeira de produção.
 
+## Comportamento do pipeline quando faltam segredos
+
+O job de release agora executa a pré-verificação e **falha explicitamente** se a URL HTTPS pública ou qualquer segredo de assinatura estiver ausente. Isso evita que a etapa de release fique verde ou pareça ter sido concluída quando, na realidade, foi ignorada. O APK debug continua sendo uma etapa separada e não é um substituto da release assinada.
+
+Depois de configurar os segredos, a execução também verifica a assinatura com `apksigner`, confirma o identificador do pacote de produção e calcula o SHA-256 antes de publicar o artefato. Nenhum segredo deve ser colocado no código ou enviado em conversa.
+
 ## Release assinado
 
 O workflow inclui uma etapa condicional que usa os segredos do GitHub Actions:
