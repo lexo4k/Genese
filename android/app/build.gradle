@@ -1,0 +1,39 @@
+plugins {
+    id 'com.android.application'
+}
+
+def configuredBaseUrl = (project.findProperty('GENESE_BASE_URL') ?: System.getenv('GENESE_BASE_URL') ?: '').toString().trim()
+if (!configuredBaseUrl.isEmpty()) {
+    def parsed = new URI(configuredBaseUrl)
+    if (parsed.scheme != 'https' || parsed.host == null || parsed.userInfo != null) {
+        throw new GradleException('GENESE_BASE_URL must be a valid HTTPS URL without embedded credentials.')
+    }
+    if (configuredBaseUrl.endsWith('/')) configuredBaseUrl = configuredBaseUrl.substring(0, configuredBaseUrl.length() - 1)
+}
+def escapedBaseUrl = configuredBaseUrl.replace('\\', '\\\\').replace('"', '\\"')
+
+android {
+    namespace 'com.genese.pay'
+    compileSdk 35
+    defaultConfig {
+        applicationId 'com.genese.pay'
+        minSdk 26
+        targetSdk 35
+        versionCode 1
+        versionName '0.1.0'
+        buildConfigField 'String', 'GENESE_BASE_URL', '"' + escapedBaseUrl + '"'
+    }
+    buildFeatures { buildConfig true }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    buildTypes {
+        debug { applicationIdSuffix '.debug'; versionNameSuffix '-debug' }
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+}
