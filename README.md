@@ -129,3 +129,21 @@ As funções de aceite, entrega, avaliação e pagamento podem ser usadas por um
 - O programa não cria dinheiro do nada. Receita confirmada permanece zero até existir evidência confiável de recebimento.
 - Não há pagamento, depósito ou saque automático. Não confunda oportunidades listadas, cotação de mercado ou saldo manual com dinheiro recebido.
 - A lista pública é limitada e pode conter resultados desatualizados ou não elegíveis. Confirme sempre no site oficial.
+
+
+## Kit inicial de produto digital (novo)
+
+O arquivo motor_receita_inicial.py gera automaticamente um primeiro produto original simples: um guia de controle financeiro para autônomos, uma página de vendas em rascunho, um CSV vazio para registros reais e metadados da oferta.
+
+```bash
+python motor_receita_inicial.py --saida saida_genese
+python -m unittest discover -s tests -v
+```
+
+O kit começa com vendas e recebimentos confirmados em zero. Isso automatiza a preparação do produto, não a conquista de clientes nem o recebimento de dinheiro. Para transformar em receita real, é necessário revisar o material, usar uma plataforma de venda compatível, publicar a oferta e confirmar cada pagamento por fonte externa. O valor de R$ 9,90 é apenas uma hipótese inicial de preço, não uma previsão de vendas.
+
+## Etapas externas que ainda dependem de dados reais
+
+1. **Empresa:** o gerador preparar_negocio.py empresa prepara um dossiê, mas não registra empresa. A abertura deve ser feita nos canais oficiais e com os responsáveis autorizados: https://www.gov.br/empresas-e-negocios/pt-br/redesim/abrir-cnpj/
+2. **CNPJ existente:** verificador_confirmacoes_reais.py cnpj NUMERO consulta uma fonte pública de terceiros. Para verificar uma empresa específica, use um CNPJ válido e autorizado e confira o comprovante oficial. Não use exemplos fictícios como prova.
+3. **Binance:** verificador_confirmacoes_reais.py binance-deposits exige variáveis de API configuradas no próprio ambiente, com permissão somente de leitura. Nunca envie chave ou segredo pelo chat, commit, issue ou arquivo público. A consulta não transfere fundos e não prova, sozinha, que um depósito veio de uma venda do GÊNESE.
