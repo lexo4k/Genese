@@ -91,7 +91,7 @@ A documentação atual do repositório diz que o runtime apenas inicia um minera
 - A consulta somente leitura não é um motor de pagamento.
 - O runtime depende de um executável externo compatível, instalado e configurado pelo operador.
 - O teste de conectividade externa precisa ser executado numa rede em que o dispositivo/servidor tenha acesso à Internet. Uma falha de DNS/egress no ambiente de execução não pode ser corrigida apenas por alterar o código.
-- Não há APK Android nativo comprovado nesta branch.
+- Há um esqueleto de app Android nativo em `app/` e um workflow de compilação em `.github/workflows/android-apk.yml`. Ainda não confirmei um APK gerado com sucesso nesta branch de consolidação; o workflow de APK está configurado para as branches `Lexo/NutriFit` e `android-app-download`, não para `genese-integrado`.
 
 ## Próxima ordem de execução
 
