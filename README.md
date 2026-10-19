@@ -80,6 +80,39 @@ python -m py_compile binance_account_readonly.py
 
 O arquivo `registro_recompensas.py` registra oportunidades e acompanha estados como `encontrada`, `aprovada` e `paga`. É um livro contábil local, não uma consulta bancária independente. Só marque uma recompensa como aprovada/paga quando houver evidência oficial correspondente.
 
+## Ofertas de recompensa com aceite, entrega e pagamento rastreáveis
+
+O arquivo `contratos_recompensa.py` implementa um fluxo local de estados para ofertas de trabalho: rascunho → aceite explícito do pagador → evidência de fundos informada → entrega → aprovação/rejeição → pagamento informado → confirmação externa registrada.
+
+Esse fluxo **não cria uma empresa pagadora nem força uma entidade a pagar**. O pagador precisa aceitar os termos; a evidência de financiamento deve vir de uma fonte legítima (por exemplo, um serviço de escrow/marketplace real ou confirmação do pagador). Nesta versão, as URLs e referências são registradas, mas não verificadas automaticamente por banco, custodiante ou API. Por isso os estados deixam claro quando a confirmação externa ainda está pendente.
+
+O módulo é um protótipo local de workflow, não um serviço jurídico de escrow nem um processador de pagamentos. Não aceite tarefas sem conferir identidade do pagador, termos, escopo, critérios, prazo, impostos, política de disputa e disponibilidade real dos fundos.
+
+Criar rascunho de oferta a partir de um arquivo JSON:
+
+```bash
+python contratos_recompensa.py new --json oferta.json
+python contratos_recompensa.py list
+```
+
+Campos de exemplo para `oferta.json`:
+
+```json
+{
+  "pagador": "Nome da empresa ou cliente",
+  "contato_pagador": "contato oficial",
+  "termos_url": "https://example.org/terms",
+  "trabalho": "Descrição específica do trabalho",
+  "criterios_aceitacao": "Como o resultado será avaliado",
+  "valor": 100,
+  "moeda": "BRL",
+  "prazo_utc": "2026-12-31T23:59:59Z",
+  "pagamento_metodo": "Método de pagamento acordado"
+}
+```
+
+As funções de aceite, entrega, avaliação e pagamento podem ser usadas por uma futura API autenticada. Ainda não há endpoint web, login, assinatura digital, verificação automática de fundos ou confirmação direta da Binance para esse fluxo.
+
 ## Prioridades de desenvolvimento
 
 1. **Fonte de receita concreta:** escolher um provedor ou marketplace com remuneração explícita e regras verificáveis; o motor de oportunidades, sozinho, não gera receita.
