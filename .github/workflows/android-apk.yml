@@ -84,3 +84,65 @@ jobs:
           else
             echo 'Segredos de URL e assinatura presentes. Ainda é obrigatório executar testes reais do backend antes da publicação.'
           fi
+
+  build-release:
+    name: Build signed production APK when secrets are configured
+    runs-on: ubuntu-latest
+    needs: build-debug
+    timeout-minutes: 25
+    env:
+      GENESE_BASE_URL: ${{ secrets.GENESE_BASE_URL }}
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+    steps:
+      - name: Check release configuration
+        id: preflight
+        shell: bash
+        run: |
+          missing=0
+          [[ "$GENESE_BASE_URL" =~ ^https://[^/]+ ]] || { echo "::notice::Release blocked: configure GENESE_BASE_URL with the public HTTPS backend URL."; missing=1; }
+          [[ -n "$ANDROID_KEYSTORE_BASE64" ]] || { echo "::notice::Release blocked: configure Android signing secrets in repository Actions secrets."; missing=1; }
+          [[ -n "$ANDROID_KEYSTORE_PASSWORD" && -n "$ANDROID_KEY_ALIAS" && -n "$ANDROID_KEY_PASSWORD" ]] || { echo "::notice::Release blocked: one or more signing secrets are missing."; missing=1; }
+          if (( missing )); then echo "ready=false" >> "$GITHUB_OUTPUT"; else echo "ready=true" >> "$GITHUB_OUTPUT"; fi
+      - uses: actions/checkout@v4
+        if: steps.preflight.outputs.ready == 'true'
+      - uses: actions/setup-java@v4
+        if: steps.preflight.outputs.ready == 'true'
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        if: steps.preflight.outputs.ready == 'true'
+      - name: Install Android SDK packages
+        if: steps.preflight.outputs.ready == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          export ANDROID_HOME="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          echo "ANDROID_HOME=$ANDROID_HOME" >> "$GITHUB_ENV"
+          test -x "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses <<< "$(printf 'y\\n%.0s' {1..50})" >/dev/null
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+      - name: Decode signing keystore
+        if: steps.preflight.outputs.ready == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/genese-release.keystore"
+          test -s "$RUNNER_TEMP/genese-release.keystore"
+          echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/genese-release.keystore" >> "$GITHUB_ENV"
+      - name: Build signed release APK
+        if: steps.preflight.outputs.ready == 'true'
+        working-directory: android
+        run: gradle --no-daemon assembleRelease -PGENESE_BASE_URL="$GENESE_BASE_URL"
+      - name: Verify and upload signed release APK
+        if: steps.preflight.outputs.ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: genese-pay-android-signed-release-apk
+          path: android/app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+          retention-days: 30
