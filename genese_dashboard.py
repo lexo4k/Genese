@@ -13,6 +13,7 @@ from urllib.parse import urlparse
 from genese_pay_core import income_summary, load_mining_config, probe_pool
 from nicehash_readonly import credentials_from_env, collect_read_only_status
 from genese_miner_runtime import start_miner, stop_miner, status as miner_status
+from binance_readonly import BinanceAPIError, read_account_and_deposits
 
 HOST = "127.0.0.1"
 PORT = int(os.environ.get("GENESE_DASHBOARD_PORT", "8765"))
@@ -49,7 +50,7 @@ ul{padding-left:18px}.foot{margin-top:20px;color:#9eabc9;font-size:.88rem}
 <section class="card"><h2>Processo de mineração real</h2><div class="value" id="minerstate">Não iniciado</div><p class="small" id="minerdetail">Inicia um executável de mineração instalado e configurado neste servidor.</p><button id="startminer">Iniciar minerador</button> <button id="stopminer" style="background:#f0a6a6">Parar</button></section>
 <section class="card"><h2>Receita confirmada</h2><div class="value">Não disponível</div><p class="small">Nenhum valor estimado ou alegado será tratado como dinheiro recebido.</p></section>
 <section class="card"><h2>Destino Binance</h2><div class="value" id="binance">Não verificado</div><p class="small">Configurar um endereço não comprova depósito. Nenhuma transferência é executada.</p></section>
-<section class="card"><h2>API privada NiceHash</h2><div class="value" id="api">Aguardando consulta</div><p class="small" id="apidetail">Consulta somente leitura. Credenciais ficam no ambiente local.</p><button id="fetchapi">Consultar API privada</button></section>
+<section class="card"><h2>Verificação real Binance</h2><div class="value" id="binanceapi">Aguardando consulta</div><p class="small" id="binanceap_detail">Consulta real somente leitura de saldos e depósitos. Configure chaves locais sem permissão de saque.</p><button id="fetchbinance">Verificar saldo e depósitos</button><pre id="binanceoutput"></pre></section><section class="card"><h2>API privada NiceHash</h2><div class="value" id="api">Aguardando consulta</div><p class="small" id="apidetail">Consulta somente leitura. Credenciais ficam no ambiente local.</p><button id="fetchapi">Consultar API privada</button></section>
 <section class="card"><h2>Integridade do painel</h2><div class="value">Somente leitura</div><p class="small">Sem compra de hashpower, saque, transferência ou saldo fictício.</p></section>
 </div>
 <section class="card" style="margin-top:14px"><h2>Saída real do minerador</h2><pre id="mineroutput">Nenhum processo iniciado.</pre></section>
@@ -91,7 +92,17 @@ async function fetchApi(){
  }catch(e){$('api').textContent='Falha';$('apidetail').textContent=String(e)}
  finally{$('fetchapi').disabled=false}
 }
-$('refresh').addEventListener('click',refresh); $('fetchapi').addEventListener('click',fetchApi);
+async function fetchBinance(){
+ $('fetchbinance').disabled=true; $('binanceapi').textContent='Consultando Binance…';
+ try{const r=await fetch('/api/binance',{cache:'no-store'});const d=await r.json();
+  if(!r.ok) throw new Error(d.error||d.note||'Falha na consulta');
+  $('binanceapi').textContent=d.status==='provider_confirmed_read_only'?'Dados reais recebidos':'Credenciais ausentes';
+  $('binanceap_detail').textContent=d.note||d.status;
+  $('binanceoutput').textContent=JSON.stringify({account_balances:d.account_balances,recent_deposits:d.recent_deposits},null,2);
+ }catch(e){$('binanceapi').textContent='Não verificado';$('binanceap_detail').textContent=String(e)}
+ finally{$('fetchbinance').disabled=false}
+}
+$('refresh').addEventListener('click',refresh); $('fetchapi').addEventListener('click',fetchApi); $('fetchbinance').addEventListener('click',fetchBinance);
 $('startminer').addEventListener('click',()=>minerAction('start')); $('stopminer').addEventListener('click',()=>minerAction('stop')); refresh(); refreshMiner();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js').catch(()=>{});
 </script>
@@ -165,6 +176,12 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path == "/api/miner":
             self._json(miner_status())
+            return
+        if path == "/api/binance":
+            try:
+                self._json(read_account_and_deposits(timeout=8.0))
+            except (ValueError, BinanceAPIError) as exc:
+                self._json({"ok": False, "status": "verification_failed", "error": str(exc)}, 502)
             return
         if path == "/api/nicehash":
             try:
