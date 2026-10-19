@@ -27,7 +27,7 @@ class BinanceReadOnlyTests(unittest.TestCase):
 
         def fake_urlopen(request, timeout):
             captured["url"] = request.full_url
-            captured["key"] = request.get_header("X-binance-apikey")
+            captured["key"] = request.get_header("X-mbx-apikey")
             captured["timeout"] = timeout
             return Response()
 
