@@ -16,9 +16,15 @@
 7. Execute novamente o workflow Android e confirme que o artefato de release aparece, a assinatura é verificada e o APK aponta para o domínio implantado.
 
 ## Limites financeiros importantes
-O backend atual é um ledger contábil, não uma instituição financeira nem uma carteira custodiada. As rotas de checkout antigas usam Mercado Pago e não são a fonte de receita nem o destino de recebimento deste projeto. Não configure credenciais Mercado Pago para tentar transformar esse ledger em saldo sacável. Transferências e depósitos Binance ainda não estão implementados nem verificados.
+O backend atual é um ledger contábil, não uma instituição financeira nem uma carteira custodiada. As rotas de cobrança Pix e o webhook legado do Mercado Pago foram bloqueados com HTTP 410; variáveis de ambiente não podem reativá-los. O projeto não usa pagamentos de clientes como fonte de rendimento. Consulta autenticada à conta Binance, detecção de receita legítima e transferência para um endereço de depósito ainda não constituem uma integração financeira completa nem estão verificados.
 
 Uma carteira Binance recebe fundos reais quando um pagador legítimo envia criptoativos para um endereço de depósito correto, na rede correta, e a transação é confirmada. O software não pode criar dinheiro do nada. Não use endereços ou chaves inventados. Uma integração automática futura exige escolher ativo/rede, endereço oficial da conta e API keys com permissões mínimas, guardadas apenas no servidor. Nunca habilite saques com uma chave API de leitura.
+
+## Validação feita no CI
+- Testes de sintaxe Python e testes unitários existentes.
+- Construção da imagem Docker e teste HTTP de `/health`.
+- Teste de ponta a ponta no container para cadastro, login, sessão autenticada, carteira inicial zerada e bloqueio do endpoint antigo de cobrança.
+- Esses testes não substituem a implantação externa, teste em aparelho Android, revisão de segurança ou confirmação de recebimento real na Binance.
 
 ## Persistência e segurança
 - O disco é persistente; faça backup e teste recuperação antes de usar dados reais.
