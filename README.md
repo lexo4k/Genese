@@ -44,7 +44,7 @@ O painel permanece preso a `127.0.0.1` por segurança. Não o exponha diretament
 
 A interface inclui manifesto PWA, ícone SVG e service worker para instalação como atalho em navegadores compatíveis. Os arquivos são servidos pelo próprio painel local. O cache é limitado à interface estática; as rotas `/api/` nunca são servidas do cache offline, para evitar exibir dados antigos como se fossem atuais.
 
-**Limite importante:** instalar a interface não instala Python nem um minerador no Android. Para que os controles funcionem, o backend Python precisa estar em execução no mesmo dispositivo e o minerador externo precisa estar instalado e configurado. Este repositório ainda não contém APK Android nativo, não executa mineração por conta própria e não confirma pagamentos/depósitos Binance. O painel continua vinculado a `127.0.0.1` e rejeita POSTs de origens web diferentes.
+**Limite importante:** instalar a interface não instala Python nem um minerador no Android. Para que os controles funcionem, o backend Python precisa estar em execução no mesmo dispositivo e o minerador externo precisa estar instalado e configurado. Este repositório contém um esqueleto Android nativo (`app/`) e um workflow de compilação de APK (`.github/workflows/android-apk.yml`), mas ainda não confirmei um APK compilado com sucesso nesta branch de consolidação. O app não executa mineração por conta própria e não confirma pagamentos/depósitos Binance. O painel continua vinculado a `127.0.0.1` e rejeita POSTs de origens web diferentes.
 
 ## Verificação de saldo e depósitos Binance (somente leitura)
 
