@@ -1,0 +1,73 @@
+name: GENESE PAY Android APK
+on:
+  push:
+    branches: [feature/carteira-financeira-mvp]
+    paths: ['android/**', '.github/workflows/android-apk.yml']
+  pull_request:
+    branches: [feature/carteira-financeira-mvp]
+    paths: ['android/**', '.github/workflows/android-apk.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build-debug:
+    name: Build and verify installable debug APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+      - uses: android-actions/setup-android@v3
+      - name: Install Android platform and build tools
+        run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - name: Verify security defaults
+        run: |
+          test -f android/app/src/main/AndroidManifest.xml
+          test -f android/app/src/main/java/com/genese/pay/MainActivity.java
+          ! grep -R -E 'usesCleartextTraffic="true"|MIXED_CONTENT_ALWAYS_ALLOW' android/app/src/main
+      - name: Build debug APK
+        working-directory: android
+        run: gradle --no-daemon assembleDebug
+      - name: Verify APK exists and is non-empty
+        run: |
+          test -s android/app/build/outputs/apk/debug/app-debug.apk
+          sha256sum android/app/build/outputs/apk/debug/app-debug.apk
+      - name: Upload installable debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: genese-pay-android-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 30
+  release-readiness:
+    name: Check release prerequisites
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report production blockers
+        shell: bash
+        env:
+          GENESE_BASE_URL: ${{ secrets.GENESE_BASE_URL }}
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          missing=()
+          [[ "$GENESE_BASE_URL" =~ ^https://[^/]+ ]] || missing+=("GENESE_BASE_URL HTTPS público")
+          [[ -n "$ANDROID_KEYSTORE_BASE64" ]] || missing+=("ANDROID_KEYSTORE_BASE64 (keystore de assinatura)")
+          [[ -n "$ANDROID_KEYSTORE_PASSWORD" ]] || missing+=("ANDROID_KEYSTORE_PASSWORD")
+          [[ -n "$ANDROID_KEY_ALIAS" ]] || missing+=("ANDROID_KEY_ALIAS")
+          [[ -n "$ANDROID_KEY_PASSWORD" ]] || missing+=("ANDROID_KEY_PASSWORD")
+          if (( ${#missing[@]} )); then
+            echo 'APK debug: pode ser compilado para teste.'
+            echo 'Release de produção bloqueado; faltam:'
+            printf ' - %s\n' "${missing[@]}"
+            echo 'Não publicar como produção até configurar domínio HTTPS, validar backend e assinatura.'
+          else
+            echo 'Segredos de URL e assinatura presentes. Ainda é obrigatório executar testes reais do backend antes da publicação.'
+          fi
