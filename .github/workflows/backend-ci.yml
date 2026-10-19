@@ -1,7 +1,7 @@
 name: GÊNESE PAY backend CI
 on:
   push:
-    branches: [fix/deployable-backend-binance]
+    branches: [feature/carteira-financeira-mvp, fix/deployable-backend-binance]
   pull_request:
     branches: [fix/deployable-backend-binance]
   workflow_dispatch:
