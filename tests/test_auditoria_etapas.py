@@ -49,7 +49,7 @@ class AuditoriaEtapasTests(unittest.TestCase):
             self.assertTrue((Path(tmp) / "evidencias/status_etapas.json").is_file())
             md = (Path(tmp) / "evidencias/STATUS_ETAPAS.md").read_text(encoding="utf-8")
             self.assertIn("Receita confirmada: R$ 0,00", md)
-            self.assertEqual(report["resumo"]["etapas_total"], 9)
+            self.assertEqual(report["resumo"]["etapas_total"], 10)
 
 
 if __name__ == "__main__":
