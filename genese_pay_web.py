@@ -16,6 +16,7 @@ from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parent
 REPORT = ROOT / "genese_receita.json"
+PAYER_CARDS = ROOT / "fontes_pagadoras.json"
 
 HTML = r"""<!doctype html>
 <html lang="pt-BR">
@@ -110,6 +111,12 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200, status_payload())
         elif path == "/api/opportunities":
             self._json(200, read_report())
+        elif path == "/api/payer-sources":
+            try:
+                cards = json.loads(PAYER_CARDS.read_text(encoding="utf-8"))
+                self._json(200, cards if isinstance(cards, dict) else {})
+            except (OSError, json.JSONDecodeError):
+                self._json(200, {"fichas_geradas": 0, "pagadores_confirmados": 0, "receita_confirmada": 0, "fichas": []})
         else:
             self._json(404, {"error": "not_found"})
 
