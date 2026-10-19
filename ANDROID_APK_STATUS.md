@@ -32,10 +32,11 @@ Para uma versão utilizável, é necessário:
 
 ## Última compilação confirmada
 
-- Execução de debug: https://github.com/lexo4k/Genese/actions/runs/39188770031
-- Resultado observado: sucesso nas etapas de compilação, verificação de existência do APK e upload do artefato.
+- Execução de debug com verificações ampliadas: https://github.com/lexo4k/Genese/actions/runs/39188886712
+- Resultado observado: sucesso na compilação, verificação da assinatura, conferência do nome do pacote Android, cálculo de checksum e upload do artefato.
 - Artefato: `genese-pay-android-debug-apk`.
-- Isso confirma a compilação automatizada do APK de teste, não a validação em aparelho, implantação do backend ou prontidão financeira de produção.
+- SHA-256 do APK de teste: `6b04f4b049388062d735c30024d2e8d23bbfa74fd940e5c5774eff38080508e4`.
+- O artefato foi baixado e o ZIP do APK passou na verificação de integridade. Isso confirma a compilação automatizada e a assinatura de debug, não a validação em aparelho, implantação do backend ou prontidão financeira de produção.
 
 ## Release assinado
 
