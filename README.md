@@ -1,13 +1,14 @@
 # GÊNESE PAY
 
-Projeto em evolução para monitoramento real, contabilização auditável e preparação de integrações. O repositório ainda não é um minerador completo nem um aplicativo Android/web pronto.
+Projeto em evolução para monitoramento de conectividade, registro de evidências e preparação de integrações. O repositório ainda não é um minerador completo nem um aplicativo Android/web pronto.
 
 ## Núcleo adicionado
 
-- `genese_pay_core.py`: configuração explícita de pool, verificação real de handshake TLS com o endpoint configurado e livro local de receitas comprovadas.
+- `genese_pay_core.py`: configuração explícita de pool e verificação real de handshake TLS com o endpoint configurado.
 - O teste de conexão de pool **não** significa que há mineração ativa. O módulo não submete shares nem inventa hashrate.
-- A receita só entra no livro com provedor, moeda, valor positivo, referência externa de transação e URL HTTPS de evidência. Referências duplicadas são recusadas.
-- O total é separado por moeda. Não mistura BTC com BRL nem transforma oportunidade em dinheiro recebido.
+- O livro local aceita declarações com provedor, moeda, valor positivo, referência e URL HTTPS, mas as mantém como **NÃO VERIFICADAS**. Uma URL e um identificador não provam que a transação existe.
+- Os valores declarados nunca são chamados de receita confirmada e o saldo externo fica desconhecido até existir validação direta e autenticada no provedor.
+- Referências duplicadas são recusadas. Totais ficam separados por moeda.
 - O campo de destino Binance é apenas configuração de endereço/rede; o projeto **não** executa saques nem confirma saldo na Binance.
 
 ## Configuração do núcleo
@@ -16,7 +17,7 @@ Variáveis opcionais:
 - `GENESE_POOL_HOST` (padrão: `nhmp-ssl.eu.nicehash.com`)
 - `GENESE_POOL_PORT` (padrão: `443`)
 - `GENESE_WORKER` (nome do worker)
-- `BINANCE_DEPOSIT_ADDRESS` e `BINANCE_DEPOSIT_NETWORK` (devem ser informados juntos; confirme que moeda e rede são compatíveis no serviço de destino antes de usar)
+- `BINANCE_DEPOSIT_ADDRESS` e `BINANCE_DEPOSIT_NETWORK` (devem ser informados juntos; a configuração não valida endereço nem compatibilidade de rede)
 
 O banco SQLite local é `genese_pay.sqlite3` por padrão; use `GENESE_LEDGER_DB` para escolher outro caminho. Não coloque chaves de API, senhas ou frases-semente no repositório.
 
