@@ -1,28 +1,38 @@
-# GÊNESE
+# GÊNESE PAY
 
-Monitor de fontes públicas para descobrir programas de recompensa de segurança e priorizar os que parecem relacionados a cripto/Web3.
+Projeto em evolução para monitoramento real, contabilização auditável e preparação de integrações. O repositório ainda não é um minerador completo nem um aplicativo Android/web pronto.
 
-## O que faz
-- Testa DNS, HTTPS e acesso às fontes públicas.
-- Consulta um catálogo público de programas de bug bounty.
-- Prioriza programas com termos como Bitcoin, wallet, blockchain, Web3 e DeFi.
-- Gera relatórios JSON para revisar as oportunidades.
+## Núcleo adicionado
 
-## O que não faz
-- Não procura nem toma fundos de carteiras ou contas de terceiros.
-- Não explora vulnerabilidades, não contorna autenticação e não faz varredura ativa de alvos.
-- Não promete rendimento nem afirma que um programa contém fundos perdidos.
-- Não submete relatórios nem movimenta pagamentos automaticamente.
+- `genese_pay_core.py`: configuração explícita de pool, verificação real de handshake TLS com o endpoint configurado e livro local de receitas comprovadas.
+- O teste de conexão de pool **não** significa que há mineração ativa. O módulo não submete shares nem inventa hashrate.
+- A receita só entra no livro com provedor, moeda, valor positivo, referência externa de transação e URL HTTPS de evidência. Referências duplicadas são recusadas.
+- O total é separado por moeda. Não mistura BTC com BRL nem transforma oportunidade em dinheiro recebido.
+- O campo de destino Binance é apenas configuração de endereço/rede; o projeto **não** executa saques nem confirma saldo na Binance.
 
-Uma recompensa só pode surgir de um programa autorizado, com teste dentro do escopo, falha válida, relatório aceito e aprovação do programa.
+## Configuração do núcleo
 
-## Executar
+Variáveis opcionais:
+- `GENESE_POOL_HOST` (padrão: `nhmp-ssl.eu.nicehash.com`)
+- `GENESE_POOL_PORT` (padrão: `443`)
+- `GENESE_WORKER` (nome do worker)
+- `BINANCE_DEPOSIT_ADDRESS` e `BINANCE_DEPOSIT_NETWORK` (devem ser informados juntos; confirme que moeda e rede são compatíveis no serviço de destino antes de usar)
+
+O banco SQLite local é `genese_pay.sqlite3` por padrão; use `GENESE_LEDGER_DB` para escolher outro caminho. Não coloque chaves de API, senhas ou frases-semente no repositório.
+
+## Testar
+
 Requisitos: Python 3.10+ e `curl`.
 
 ```bash
+python -m py_compile genese_autonomo.py priorizador_recompensas.py genese_pay_core.py
+python -m unittest discover -s tests -v
 python genese_autonomo.py --json
 python priorizador_recompensas.py > oportunidades.json
-python -m unittest discover -s tests -v
 ```
 
-O fluxo GitHub Actions executa testes e guarda os relatórios como artefatos.
+GitHub Actions executa os testes e guarda relatórios. Aprovação dos testes valida o código testado, não prova rentabilidade, mineração ativa, saldo externo nem pagamento.
+
+## O que ainda falta para o objetivo final
+
+A execução real de mineração requer um mecanismo de mineração compatível com hardware suportado e configuração de pool/worker; o núcleo atual apenas verifica conectividade. Também faltam uma integração autenticada com dados oficiais de ganhos do provedor, interface Android/web e fluxo de depósito verificado. Nenhuma transferência automática para Binance foi implementada.
