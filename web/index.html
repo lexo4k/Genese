@@ -4,15 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#101827">
-<title>GÊNESE | Carteira</title>
+<title>GÊNESE PAY | Carteira contábil</title>
 <style>
 :root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#eef3ff;background:#101827}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at top right,#253a61,#101827 55%)}main{max-width:760px;margin:auto;padding:24px 16px 48px}.brand{font-size:13px;letter-spacing:.22em;color:#9cb8ff;font-weight:800}.hero{padding:20px 0}.hero h1{font-size:clamp(30px,7vw,48px);margin:8px 0}.muted{color:#aab7cf;line-height:1.5}.card{background:#18243a;border:1px solid #30415f;border-radius:18px;padding:18px;margin:14px 0;box-shadow:0 12px 30px #0002}.balance{font-size:clamp(32px,8vw,44px);font-weight:800;letter-spacing:-.04em;margin:8px 0}.tag{display:inline-block;border-radius:999px;padding:6px 10px;background:#473719;color:#ffd783;font-size:12px;font-weight:700}label{display:block;margin:12px 0 6px;color:#cbd6ea;font-size:14px}input{width:100%;padding:13px;border-radius:10px;border:1px solid #465875;background:#101827;color:white;font:inherit}button{padding:12px 16px;border:0;border-radius:10px;background:#a8c4ff;color:#0b1730;font-weight:800;font:inherit;cursor:pointer;margin:8px 8px 0 0}button.secondary{background:#2b3d5c;color:#edf3ff}button:disabled{opacity:.45;cursor:not-allowed}.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.notice{border-left:3px solid #ffc75d;padding:10px 12px;background:#2a2b2b;border-radius:8px;color:#f5dfac;font-size:13px;line-height:1.5}pre{white-space:pre-wrap;word-break:break-word;background:#0b1220;padding:12px;border-radius:10px;color:#c9d9f7;min-height:42px}ul{padding-left:20px;color:#c8d5eb;line-height:1.7}.hidden{display:none}@media(max-width:520px){.row{grid-template-columns:1fr}}
 </style>
 </head>
 <body><main>
-<div class="brand">GÊNESE / FINTECH MVP</div>
-<header class="hero"><h1>Sua carteira, com transparência.</h1><p class="muted">Contas de usuário, extrato e cobranças Pix de comerciante via Mercado Pago em sandbox. O saldo interno não é saldo bancário.</p></header>
-<div id="modeNotice" class="notice"><strong>Checkout do comerciante.</strong> A cobrança é paga ao titular da conta Mercado Pago conectada. Ela não deposita dinheiro no saldo interno do GÊNESE e não habilita saques ou transferências.</div>
+<div class="brand">GÊNESE PAY / CARTEIRA CONTÁBIL</div>
+<header class="hero"><h1>Sua carteira, com transparência.</h1><p class="muted">Contas de usuário, extrato e transparência sobre registros contábeis. Esta versão não processa pagamentos nem mantém dinheiro real.</p></header>
+<div id="modeNotice" class="notice"><strong>Modo contábil.</strong> Não há cobranças Pix, transferências, saques ou geração de dinheiro. O saldo exibido é apenas um registro interno e começa em zero.</div>
 <section id="auth" class="card">
 <h2>Entrar ou criar conta</h2>
 <label for="email">E-mail</label><input id="email" type="email" autocomplete="email" maxlength="254" placeholder="voce@exemplo.com">
@@ -21,28 +21,17 @@
 <p class="muted">Use uma senha exclusiva para testes. Não reutilize a senha do banco ou do e-mail.</p>
 </section>
 <section id="account" class="hidden">
-<div class="card"><span id="modeTag" class="tag">CARTEIRA CONTÁBIL · PIX</span><p class="muted">Saldo contábil interno</p><div class="balance" id="balance">R$ 0,00</div><p class="muted" id="accountEmail"></p><button id="refresh">Atualizar</button><button id="logout" class="secondary">Sair</button></div>
-<div class="card"><h2>Cobrança Pix (teste)</h2>
-<label for="chargeAmount">Valor da cobrança (R$ 1 a R$ 10.000)</label><input id="chargeAmount" type="number" min="1" max="10000" step="0.01" value="1.00">
-<label for="payerEmail">E-mail de quem vai pagar</label><input id="payerEmail" type="email" autocomplete="email" maxlength="254" placeholder="pagador@exemplo.com">
-<label for="chargeDescription">Descrição</label><input id="chargeDescription" maxlength="120" value="Cobrança GÊNESE">
-<button id="createCharge" disabled>Criar cobrança de teste</button>
-<button id="loadCharges" class="secondary">Atualizar cobranças</button>
-<p class="muted">O botão só é liberado quando a API confirma que o token do provedor está configurado para sandbox. Cobranças não creditam o saldo interno.</p>
-<div id="chargeResult" class="notice hidden"></div>
-<h3>Minhas cobranças</h3><ul id="charges"><li>Nenhuma cobrança carregada.</li></ul>
-<button id="copyPix" class="secondary hidden">Copiar Pix copia e cola</button>
-</div>
+<div class="card"><span id="modeTag" class="tag">CARTEIRA CONTÁBIL · SEM PROVEDOR</span><p class="muted">Saldo contábil interno</p><div class="balance" id="balance">R$ 0,00</div><p class="muted" id="accountEmail"></p><button id="refresh">Atualizar</button><button id="logout" class="secondary">Sair</button></div>
+<div class="card"><h2>Pagamentos desativados</h2><p class="muted">Este projeto não cobra clientes nem oferece transferências. A integração financeira real só poderá ser ativada após desenvolvimento, auditoria e testes independentes.</p></div>
 <div class="card"><h2>Transferências</h2><button disabled>Enviar Pix · não disponível</button><p class="muted">Transferências e saques não estão implementados.</p></div>
 <div class="card"><h2>Extrato</h2><ul id="transactions"><li>Nenhuma transação registrada.</li></ul></div>
 </section>
 <div class="card"><h2>Estado do serviço</h2><pre id="status">Verificando API...</pre></div>
-<footer class="muted"><small>GÊNESE Wallet · Não é uma instituição financeira nem uma conta bancária. Não deposite dinheiro nesta versão.</small></footer>
+<footer class="muted"><small>GÊNESE PAY · Não é uma instituição financeira nem uma conta bancária. Nenhum saldo nesta versão representa dinheiro disponível para saque.</small></footer>
 </main>
 <script>
 const $ = id => document.getElementById(id);
 let token = sessionStorage.getItem("genese_token") || "";
-let currentPixCode = "";
 function money(cents){return new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format((Number(cents)||0)/100)}
 async function api(path, body, method="POST"){
  const headers={"Content-Type":"application/json"};
@@ -53,27 +42,6 @@ async function api(path, body, method="POST"){
  return data;
 }
 function showError(err){$("status").textContent="Erro: "+err.message}
-async function loadCharges(){
- const data=await api("/api/pix/charges",undefined,"GET");
- const list=$("charges");list.replaceChildren();
- if(!data.charges.length){const li=document.createElement("li");li.textContent="Nenhuma cobrança criada.";list.append(li);return}
- for(const charge of data.charges){
-  const li=document.createElement("li");
-  li.textContent=new Date(charge.created_at*1000).toLocaleString("pt-BR")+" · "+money(charge.amount_cents)+" · "+charge.status+" · "+charge.description;
-  const btn=document.createElement("button");btn.className="secondary";btn.textContent="Ver cobrança";
-  btn.onclick=async()=>{try{const result=await api("/api/pix/charges/"+encodeURIComponent(charge.id),undefined,"GET");showCharge(result.charge)}catch(e){showError(e)}};
-  li.append(document.createElement("br"),btn);list.append(li);
- }
-}
-function showCharge(charge){
- currentPixCode=charge.pix_copy_paste||"";
- const box=$("chargeResult");box.classList.remove("hidden");box.replaceChildren();
- const title=document.createElement("strong");title.textContent="Cobrança "+charge.status+" · "+money(charge.amount_cents);box.append(title);
- const p=document.createElement("p");p.textContent="Ordem do provedor: "+(charge.provider_order_id||"n/d")+". Isso não altera o saldo da carteira.";box.append(p);
- if(currentPixCode){const pre=document.createElement("pre");pre.textContent=currentPixCode;box.append(pre);$("copyPix").classList.remove("hidden")}else{$("copyPix").classList.add("hidden")}
- if(charge.qr_code_base64){const img=document.createElement("img");img.alt="QR Code Pix de teste";img.style.maxWidth="240px";img.style.width="100%";img.src="data:image/png;base64,"+charge.qr_code_base64;box.append(img)}
- if(charge.ticket_url){const a=document.createElement("a");a.href=charge.ticket_url;a.target="_blank";a.rel="noopener noreferrer";a.textContent="Abrir instruções de pagamento de teste";box.append(document.createElement("br"),a)}
-}
 async function refresh(){
  const [me,wallet,tx]=await Promise.all([api("/api/me",undefined,"GET"),api("/api/wallet",undefined,"GET"),api("/api/transactions",undefined,"GET")]);
  $("accountEmail").textContent=me.user.email;
@@ -82,7 +50,7 @@ async function refresh(){
  if(!tx.transactions.length){const li=document.createElement("li");li.textContent="Nenhuma transação registrada.";list.append(li)}
  for(const item of tx.transactions){const li=document.createElement("li");li.textContent=new Date(item.created_at*1000).toLocaleString("pt-BR")+" · "+item.description+" · "+money(item.amount_cents)+" · "+item.status;list.append(li)}
  $("auth").classList.add("hidden");$("account").classList.remove("hidden");
- $("status").textContent="API autenticada. Carteira contábil interna; cobranças apenas em sandbox."; await loadCharges().catch(()=>{});
+ $("status").textContent="API autenticada. Modo contábil; pagamentos reais desativados.";
 }
 async function auth(endpoint){
  try{
@@ -94,30 +62,11 @@ async function auth(endpoint){
 $("login").onclick=()=>auth("/api/login");
 $("register").onclick=()=>auth("/api/register");
 $("refresh").onclick=()=>refresh().catch(showError);
-$("createCharge").onclick=async()=>{
- try{
-  const reais=Number($("chargeAmount").value);
-  if(!Number.isFinite(reais)||reais<1||reais>10000||Math.round(reais*100)!==reais*100)throw new Error("Informe um valor entre R$ 1,00 e R$ 10.000,00 com até 2 casas decimais.");
-  const result=await api("/api/pix/charge",{amount_cents:Math.round(reais*100),payer_email:$("payerEmail").value,description:$("chargeDescription").value});
-  showCharge(result.charge);await loadCharges();
- }catch(e){showError(e)}
-};
-$("loadCharges").onclick=()=>loadCharges().catch(showError);
-$("copyPix").onclick=async()=>{try{await navigator.clipboard.writeText(currentPixCode);$("status").textContent="Código Pix de teste copiado."}catch(e){$("status").textContent="Não foi possível copiar automaticamente. Selecione o código exibido."}};
 $("logout").onclick=async()=>{try{await api("/api/logout",{})}catch(e){} token="";sessionStorage.removeItem("genese_token");$("account").classList.add("hidden");$("auth").classList.remove("hidden");$("status").textContent="Sessão encerrada."};
 fetch("/health").then(r=>r.json()).then(d=>{
  $("status").textContent=JSON.stringify(d,null,2);
- $("createCharge").disabled=!d.pix_enabled;
- if(d.production_checkout_enabled){
-  $("modeTag").textContent="CHECKOUT PIX · PRODUÇÃO";
-  $("modeNotice").textContent="Modo de produção ativo: cobranças podem movimentar dinheiro real para a conta comerciante configurada. Confira valor e pagador antes de criar. Isso não é saldo de carteira nem habilita saques.";
- }else if(d.merchant_pix_checkout_enabled){
-  $("modeTag").textContent="CHECKOUT PIX · SANDBOX";
-  $("modeNotice").textContent="Modo de teste ativo. As cobranças são simuladas e não movimentam dinheiro real. O saldo interno não representa fundos bancários.";
- }else{
-  $("modeTag").textContent="CARTEIRA CONTÁBIL · SEM PROVEDOR";
-  $("modeNotice").textContent="Nenhum provedor Pix está configurado. A carteira não recebe nem envia dinheiro real.";
- }
-}).catch(e=>{$("status").textContent="API indisponível. Inicie wallet_api.py e abra a interface pelo mesmo servidor."; $("createCharge").disabled=true});
+ $("modeTag").textContent="CARTEIRA CONTÁBIL · SEM PROVEDOR";
+ $("modeNotice").textContent="Cobranças, transferências e geração de dinheiro estão desativadas. O saldo exibido é apenas contábil e começa em zero.";
+}).catch(e=>{$("status").textContent="API indisponível. Inicie wallet_api.py e abra a interface pelo mesmo servidor."});
 if(token) refresh().catch(e=>{token="";sessionStorage.removeItem("genese_token");showError(e)});
 </script></body></html>
