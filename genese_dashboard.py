@@ -12,6 +12,7 @@ from urllib.parse import urlparse
 
 from genese_pay_core import income_summary, load_mining_config, probe_pool
 from nicehash_readonly import credentials_from_env, collect_read_only_status
+from genese_miner_runtime import start_miner, stop_miner, status as miner_status
 
 HOST = "127.0.0.1"
 PORT = int(os.environ.get("GENESE_DASHBOARD_PORT", "8765"))
@@ -42,12 +43,13 @@ ul{padding-left:18px}.foot{margin-top:20px;color:#9eabc9;font-size:.88rem}
 <header><div><h1>GÊNESE PAY</h1><div class="sub">Painel local de conectividade e evidências financeiras</div></div><button id="refresh">Atualizar dados</button></header>
 <div class="grid">
 <section class="card"><h2>Conexão com o endpoint NiceHash</h2><div class="value" id="pool">Carregando…</div><p class="small" id="pooldetail">Teste TLS real. Isso não comprova mineração.</p></section>
-<section class="card"><h2>Mineração confirmada</h2><div class="value">Não confirmada</div><p class="small">O painel não envia shares nem executa um minerador.</p></section>
+<section class="card"><h2>Processo de mineração real</h2><div class="value" id="minerstate">Não iniciado</div><p class="small" id="minerdetail">Inicia um executável de mineração instalado e configurado neste servidor.</p><button id="startminer">Iniciar minerador</button> <button id="stopminer" style="background:#f0a6a6">Parar</button></section>
 <section class="card"><h2>Receita confirmada</h2><div class="value">Não disponível</div><p class="small">Nenhum valor estimado ou alegado será tratado como dinheiro recebido.</p></section>
 <section class="card"><h2>Destino Binance</h2><div class="value" id="binance">Não verificado</div><p class="small">Configurar um endereço não comprova depósito. Nenhuma transferência é executada.</p></section>
 <section class="card"><h2>API privada NiceHash</h2><div class="value" id="api">Aguardando consulta</div><p class="small" id="apidetail">Consulta somente leitura. Credenciais ficam no ambiente local.</p><button id="fetchapi">Consultar API privada</button></section>
 <section class="card"><h2>Integridade do painel</h2><div class="value">Somente leitura</div><p class="small">Sem compra de hashpower, saque, transferência ou saldo fictício.</p></section>
 </div>
+<section class="card" style="margin-top:14px"><h2>Saída real do minerador</h2><pre id="mineroutput">Nenhum processo iniciado.</pre></section>
 <section class="card" style="margin-top:14px"><h2>Resposta técnica</h2><pre id="raw">Aguardando…</pre></section>
 <p class="foot">Executado em localhost. Não exponha este painel publicamente nem compartilhe dados privados da conta.</p>
 <script>
@@ -63,6 +65,19 @@ async function refresh(){
  }catch(e){$('raw').textContent='Falha ao consultar painel: '+e}
  finally{$('refresh').disabled=false}
 }
+async function refreshMiner(){
+ try{const r=await fetch('/api/miner',{cache:'no-store'});const d=await r.json();
+  $('minerstate').textContent=d.running?'Processo ativo (PID '+d.pid+')':(d.configured?'Pronto para iniciar':'Minerador não configurado');
+  $('minerdetail').textContent='Shares aceitas observadas: '+d.accepted_shares_observed+'; rejeitadas: '+d.rejected_shares_observed+'. Receita e depósito Binance não confirmados.';
+  $('mineroutput').textContent=(d.recent_output||[]).join('\n')||d.last_error_line||d.note;
+ }catch(e){$('minerstate').textContent='Indisponível';$('minerdetail').textContent=String(e)}
+}
+async function minerAction(action){
+ $('startminer').disabled=true;$('stopminer').disabled=true;
+ try{const r=await fetch('/api/miner/'+action,{method:'POST',cache:'no-store'});const d=await r.json();$('raw').textContent=JSON.stringify(d,null,2);if(!r.ok)throw new Error(d.error||'Falha ao executar');}
+ catch(e){$('raw').textContent='Falha ao '+action+': '+e}
+ finally{$('startminer').disabled=false;$('stopminer').disabled=false;await refreshMiner()}
+}
 async function fetchApi(){
  $('fetchapi').disabled=true; $('api').textContent='Consultando…';
  try{
@@ -73,7 +88,8 @@ async function fetchApi(){
  }catch(e){$('api').textContent='Falha';$('apidetail').textContent=String(e)}
  finally{$('fetchapi').disabled=false}
 }
-$('refresh').addEventListener('click',refresh); $('fetchapi').addEventListener('click',fetchApi); refresh();
+$('refresh').addEventListener('click',refresh); $('fetchapi').addEventListener('click',fetchApi);
+$('startminer').addEventListener('click',()=>minerAction('start')); $('stopminer').addEventListener('click',()=>minerAction('stop')); refresh(); refreshMiner();
 </script>
 </body></html>"""
 
@@ -124,6 +140,9 @@ class Handler(BaseHTTPRequestHandler):
             except (OSError, ValueError) as exc:
                 self._json({"ok": False, "error": str(exc)}, 500)
             return
+        if path == "/api/miner":
+            self._json(miner_status())
+            return
         if path == "/api/nicehash":
             try:
                 creds = credentials_from_env()
@@ -138,6 +157,19 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(collect_read_only_status(creds, timeout=5.0))
             except ValueError as exc:
                 self._json({"ok": False, "error": str(exc)}, 400)
+            return
+        self._json({"ok": False, "error": "not_found"}, 404)
+
+    def do_POST(self) -> None:
+        path = urlparse(self.path).path
+        if path == "/api/miner/start":
+            try:
+                self._json(start_miner())
+            except (OSError, ValueError, RuntimeError) as exc:
+                self._json({"ok": False, "error": str(exc)}, 400)
+            return
+        if path == "/api/miner/stop":
+            self._json(stop_miner())
             return
         self._json({"ok": False, "error": "not_found"}, 404)
 
