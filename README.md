@@ -1,41 +1,40 @@
 # GÊNESE PAY
 
-Projeto em evolução para monitoramento de conectividade, registro de evidências e preparação de integrações. O repositório ainda não é um minerador completo nem um aplicativo Android/web pronto.
+O GÊNESE PAY agora pode iniciar e supervisionar um **minerador externo real já instalado** no computador/servidor onde o painel é executado. O programa não simula hashrate, não fabrica saldo e não declara pagamento sem confirmação do provedor.
 
-## Núcleo adicionado
+## Execução real do minerador
 
-- `genese_pay_core.py`: configuração explícita de pool e verificação real de handshake TLS com o endpoint configurado.
-- `genese_dashboard.py`: painel web local responsivo, preso a `127.0.0.1`, com status de conectividade, consulta privada opcional e indicadores que separam estimativas de valores confirmados.\n- `nicehash_readonly.py`: cliente autenticado **somente de leitura** para consultar dados do provedor NiceHash (rigs, não pagos e contas), usando variáveis de ambiente. Não tem endpoints de compra, saque ou alteração financeira.
-- `tests/test_nicehash_readonly.py`: valida a assinatura HMAC e bloqueia rotas fora da lista de leitura.
-- O teste de conexão de pool **não** significa que há mineração ativa. O módulo não submete shares nem inventa hashrate.
-- O livro local aceita declarações com provedor, moeda, valor positivo, referência e URL HTTPS, mas as mantém como **NÃO VERIFICADAS**. Uma URL e um identificador não provam que a transação existe.
-- Os valores declarados nunca são chamados de receita confirmada e o saldo externo fica desconhecido até existir validação direta e autenticada no provedor.
-- Referências duplicadas são recusadas. Totais ficam separados por moeda.
-- O campo de destino Binance é apenas configuração de endereço/rede; o projeto **não** executa saques nem confirma saldo na Binance.
+O runtime em `genese_miner_runtime.py` inicia o executável configurado usando subprocesso sem shell, acompanha a saída real do processo, conta linhas que indicam shares aceitas/rejeitadas e permite encerrar o processo pelo painel.
 
-## Configuração do núcleo
+É necessário ter equipamento compatível e um minerador legítimo instalado no mesmo computador/servidor. **Um Moto G35 não se transforma em ASIC nem passa a minerar Bitcoin de forma economicamente viável por instalar este painel.** O código não baixa executáveis, não instala mineradores por conta própria e não compra poder computacional.
 
-Variáveis opcionais:
-- `GENESE_POOL_HOST` (padrão: `nhmp-ssl.eu.nicehash.com`)
-- `GENESE_POOL_PORT` (padrão: `443`)
-- `GENESE_WORKER` (nome do worker)
-- `BINANCE_DEPOSIT_ADDRESS` e `BINANCE_DEPOSIT_NETWORK` (devem ser informados juntos; a configuração não valida endereço nem compatibilidade de rede)
+Configure no ambiente do computador/servidor:
 
-O banco SQLite local é `genese_pay.sqlite3` por padrão; use `GENESE_LEDGER_DB` para escolher outro caminho. Não coloque chaves de API, senhas ou frases-semente no repositório.
+- `GENESE_MINER_EXECUTABLE`: caminho absoluto para o executável do minerador instalado, ou nome disponível no PATH.
+- `GENESE_MINER_ARGS_JSON`: lista JSON de argumentos exigidos pelo minerador instalado. Os argumentos devem apontar para sua pool e credenciais/worker autorizados. Exemplo apenas de formato: `["--help"]`. Esse exemplo só mostra o formato e não inicia mineração útil.
 
-## Testar
+Não coloque chaves, senhas ou frases-semente no repositório. Use apenas credenciais que você controla e confira o endereço e a rede de pagamento diretamente no provedor antes de minerar.
 
-Requisitos: Python 3.10+ e `curl`.
+## Iniciar e parar
 
-```bash
-python -m py_compile genese_autonomo.py priorizador_recompensas.py genese_pay_core.py nicehash_readonly.py genese_dashboard.py
-python -m unittest discover -s tests -v
-python genese_autonomo.py --json
-python priorizador_recompensas.py > oportunidades.json\npython genese_dashboard.py
-```
+1. Instale e configure um minerador compatível com seu equipamento e algoritmo, seguindo a documentação oficial do fabricante/provedor.
+2. Defina as duas variáveis acima no ambiente do processo que vai executar o painel.
+3. Inicie o painel com `python genese_dashboard.py`.
+4. Abra `http://127.0.0.1:8765` no mesmo computador/servidor e use **Iniciar minerador** ou **Parar**.
+5. A saída exibida vem do processo externo. Contagens de shares não equivalem a lucro, saldo nem depósito na Binance.
 
-GitHub Actions executa os testes e guarda relatórios. Aprovação dos testes valida o código testado, não prova rentabilidade, mineração ativa, saldo externo nem pagamento.
+O painel permanece preso a `127.0.0.1` por segurança. Não o exponha diretamente à internet.
 
-Abra `http://127.0.0.1:8765` no mesmo dispositivo em que o servidor estiver rodando para acessar o painel. Ele fica disponível somente localmente por segurança. A API privada NiceHash exige credenciais autorizadas definidas no ambiente local; sem elas, nenhuma consulta privada é feita.\n\n## O que ainda falta para o objetivo final
+## NiceHash e Binance
 
-A execução real de mineração requer um mecanismo de mineração compatível com hardware suportado e configuração de pool/worker; o núcleo atual apenas verifica conectividade. Falta validar a integração de leitura com credenciais reais autorizadas do provedor, interpretar os campos reais de ganhos, interface Android/web e fluxo de depósito verificado. Nenhuma transferência automática para Binance foi implementada.
+- `nicehash_readonly.py` consulta dados da NiceHash por API autenticada somente de leitura.
+- `genese_pay_core.py` faz verificação TLS da pool e mantém declarações financeiras não verificadas separadas de receita confirmada.
+- A configuração de endereço Binance **não** realiza transferência. Este repositório ainda não executa saque na NiceHash nem comprova depósito na Binance.
+- O código não explora contas alheias, não retira fundos de terceiros e não cria dinheiro do nada.
+
+## Demais módulos
+
+- `genese_dashboard.py`: interface web local com controles do processo de mineração.
+- `genese_autonomo.py` e `priorizador_recompensas.py`: diagnóstico de conectividade e organização de programas públicos de recompensa; encontrar um programa não garante recompensa.
+- `.github/workflows/genese.yml`: verificação automática de sintaxe e integridade do código. Essa automação não representa mineração ou pagamento.
+
