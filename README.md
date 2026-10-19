@@ -44,3 +44,9 @@ O painel permanece preso a `127.0.0.1` por segurança. Não o exponha diretament
 A interface agora inclui manifesto PWA, ícone SVG e service worker para instalação como atalho de app em navegadores compatíveis. Os arquivos são servidos pelo próprio painel local. O cache é limitado à interface estática; as rotas `/api/` nunca são servidas do cache offline, para evitar exibir dados antigos como se fossem atuais.
 
 **Limite importante:** instalar a interface não instala Python nem um minerador no Android. Para que os controles funcionem, o backend Python precisa estar em execução no mesmo dispositivo e o minerador externo precisa estar instalado e configurado. Este repositório ainda não contém APK Android nativo, não executa mineração por conta própria e não confirma pagamentos/depósitos Binance. O painel continua vinculado a `127.0.0.1` e rejeita POSTs de origens web diferentes.
+
+## Verificação de saldo e depósitos Binance (somente leitura)
+
+O painel possui uma rota `/api/binance` que consulta a API privada real da Binance para obter saldos Spot e os 20 depósitos recentes. Configure `BINANCE_API_KEY` e `BINANCE_API_SECRET` no ambiente do processo. Use uma chave API com permissões de leitura somente, sem saque e sem trading. Nunca publique as chaves nem as coloque no GitHub.
+
+A integração assina requisições com HMAC-SHA256 e mostra os valores retornados pela Binance. Sem credenciais válidas, o painel informa que não verificou. A função **não** minera, não cria receita, não movimenta fundos e não faz saque. A confirmação de saldo/deposito real não prova que o GÊNESE PAY gerou esse dinheiro.
