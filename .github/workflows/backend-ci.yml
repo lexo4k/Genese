@@ -32,7 +32,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          docker run --detach --rm --name genese-pay-ci -p 10000:10000 genese-pay-ci
+          docker run --detach --rm --name genese-pay-ci -p 10000:10000 -e MP_MODE=production -e MP_ACCESS_TOKEN=APP_USR_TEST_ONLY genese-pay-ci
           cleanup() { docker stop genese-pay-ci >/dev/null 2>&1 || true; }
           trap cleanup EXIT
           for attempt in {1..20}; do
