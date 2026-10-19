@@ -1,6 +1,8 @@
 # GÊNESE PAY
 
-O GÊNESE PAY agora pode iniciar e supervisionar um **minerador externo real já instalado** no computador/servidor onde o painel é executado. O programa não simula hashrate, não fabrica saldo e não declara pagamento sem confirmação do provedor.
+> **Histórico e requisitos consolidados:** [HISTORICO_E_ESPECIFICACAO_INTEGRADA.md](HISTORICO_E_ESPECIFICACAO_INTEGRADA.md). Esse documento registra a evolução desde o scanner de oportunidades legítimas até o GÊNESE PAY, o destino Binance, o pedido posterior de mineração real, o endereço BTC informado e os critérios que impedem alegações de saldo ou pagamento sem comprovação.
+
+O GÊNESE PAY inicia e supervisiona um **minerador externo real já instalado** no computador/servidor onde o painel é executado. O programa não simula hashrate, não fabrica saldo e não declara pagamento sem confirmação do provedor.
 
 ## Execução real do minerador
 
@@ -38,10 +40,9 @@ O painel permanece preso a `127.0.0.1` por segurança. Não o exponha diretament
 - `genese_autonomo.py` e `priorizador_recompensas.py`: diagnóstico de conectividade e organização de programas públicos de recompensa; encontrar um programa não garante recompensa.
 - `.github/workflows/genese.yml`: verificação automática de sintaxe e integridade do código. Essa automação não representa mineração ou pagamento.
 
-
 ## Interface instalável no celular
 
-A interface agora inclui manifesto PWA, ícone SVG e service worker para instalação como atalho de app em navegadores compatíveis. Os arquivos são servidos pelo próprio painel local. O cache é limitado à interface estática; as rotas `/api/` nunca são servidas do cache offline, para evitar exibir dados antigos como se fossem atuais.
+A interface inclui manifesto PWA, ícone SVG e service worker para instalação como atalho em navegadores compatíveis. Os arquivos são servidos pelo próprio painel local. O cache é limitado à interface estática; as rotas `/api/` nunca são servidas do cache offline, para evitar exibir dados antigos como se fossem atuais.
 
 **Limite importante:** instalar a interface não instala Python nem um minerador no Android. Para que os controles funcionem, o backend Python precisa estar em execução no mesmo dispositivo e o minerador externo precisa estar instalado e configurado. Este repositório ainda não contém APK Android nativo, não executa mineração por conta própria e não confirma pagamentos/depósitos Binance. O painel continua vinculado a `127.0.0.1` e rejeita POSTs de origens web diferentes.
 
@@ -49,4 +50,4 @@ A interface agora inclui manifesto PWA, ícone SVG e service worker para instala
 
 O painel possui uma rota `/api/binance` que consulta a API privada real da Binance para obter saldos Spot e os 20 depósitos recentes. Configure `BINANCE_API_KEY` e `BINANCE_API_SECRET` no ambiente do processo. Use uma chave API com permissões de leitura somente, sem saque e sem trading. Nunca publique as chaves nem as coloque no GitHub.
 
-A integração assina requisições com HMAC-SHA256 e mostra os valores retornados pela Binance. Sem credenciais válidas, o painel informa que não verificou. A função **não** minera, não cria receita, não movimenta fundos e não faz saque. A confirmação de saldo/deposito real não prova que o GÊNESE PAY gerou esse dinheiro.
+A integração assina requisições com HMAC-SHA256 e mostra os valores retornados pela Binance. Sem credenciais válidas, o painel informa que não verificou. A função **não** minera, não cria receita, não movimenta fundos e não faz saque. A confirmação de saldo/depósito real não prova que o GÊNESE PAY gerou esse dinheiro.
