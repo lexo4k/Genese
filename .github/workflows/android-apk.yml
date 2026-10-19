@@ -141,6 +141,30 @@ jobs:
           echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses <<< "$(printf 'y\\n%.0s' {1..50})" >/dev/null
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+      - name: Verify deployed HTTPS backend health before signing
+        if: steps.preflight.outputs.ready == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE_URL="${GENESE_BASE_URL%/}"
+          [[ "$BASE_URL" =~ ^https://[^/]+ ]] || { echo "Backend URL must use HTTPS." >&2; exit 1; }
+          curl --fail --silent --show-error --max-time 15 "$BASE_URL/health" -o "$RUNNER_TEMP/genese-health.json"
+          python - "$RUNNER_TEMP/genese-health.json" <<'PY'
+          import json
+          import sys
+          with open(sys.argv[1], encoding="utf-8") as handle:
+              health = json.load(handle)
+          required = {
+              "ok": True,
+              "mode": "ledger-only",
+              "pix_enabled": False,
+              "real_money_enabled": False,
+          }
+          mismatches = {key: health.get(key) for key, expected in required.items() if health.get(key) != expected}
+          if mismatches:
+              raise SystemExit(f"Backend health validation failed: {mismatches}")
+          print("PASS: public HTTPS backend is reachable and explicitly reports ledger-only/no-money mode.")
+          PY
       - name: Decode signing keystore
         if: steps.preflight.outputs.ready == 'true'
         shell: bash
