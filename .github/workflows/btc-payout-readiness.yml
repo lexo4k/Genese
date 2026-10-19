@@ -6,7 +6,8 @@ on:
       - feat/btc-payout-readiness
   pull_request:
     branches:
-      - feat/btc-payout-readiness
+      - genese-real-miner-runtime
+      - feature/carteira-financeira-mvp
   workflow_dispatch:
 
 permissions:
