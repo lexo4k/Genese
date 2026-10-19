@@ -1,0 +1,28 @@
+name: GÊNESE PAY backend CI
+on:
+  push:
+    branches: [fix/deployable-backend-binance]
+  pull_request:
+    branches: [fix/deployable-backend-binance]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Python syntax
+        run: python -m py_compile wallet_api.py mercadopago_provider.py
+      - name: Unit tests
+        run: python -m unittest discover -s tests -v
+      - name: Verify deploy config
+        run: |
+          test -s Dockerfile
+          test -s render.yaml
+          grep -q 'GENESE_HOST=0.0.0.0' Dockerfile
+          grep -q 'healthCheckPath: /health' render.yaml
