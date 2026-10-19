@@ -1,0 +1,63 @@
+name: GENESE Wallet CI
+on:
+  push:
+    branches:
+      - feature/carteira-financeira-mvp
+  pull_request:
+    branches:
+      - Lexo/NutriFit
+      - feature/carteira-financeira-mvp
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile Python
+        run: python -m compileall -q wallet_api.py mercadopago_provider.py genese_autonomo.py priorizador_recompensas.py motor_receita.py genese_value_engine.py auditoria_etapas.py tests
+      - name: Unit tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m unittest discover -s tests -v
+          echo "GENESE_CI_TESTS_PASSED=true" >> "$GITHUB_ENV"
+      - name: Health smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+          tmpdir="$(mktemp -d)"
+          GENESE_DB_PATH="$tmpdir/test.sqlite3" PORT=8765 python wallet_api.py > "$tmpdir/server.log" 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true; rm -rf "$tmpdir"' EXIT
+          for i in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:8765/health > "$tmpdir/health.json"; then break; fi
+            sleep 1
+          done
+          python -c 'import json; d=json.load(open("'"$tmpdir"'/health.json")); assert d["ok"] is True; assert d["pix_enabled"] is False; print(json.dumps(d))'
+          curl --fail --silent http://127.0.0.1:8765/ | grep -q 'GÊNESE'
+          echo "GENESE_CI_HEALTH_PASSED=true" >> "$GITHUB_ENV"
+      - name: Generate evidence report
+        if: always()
+        shell: bash
+        run: |
+          python auditoria_etapas.py
+      - name: Upload evidence report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: genese-evidence-report
+          path: |
+            evidencias/status_etapas.json
+            evidencias/STATUS_ETAPAS.md
+          if-no-files-found: warn
+          retention-days: 30

@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "title": "Kit de Controle Financeiro para Autônomos",
+  "price_suggestion_brl": 9.9,
+  "currency": "BRL",
+  "status": "draft_not_published",
+  "sales": 0,
+  "confirmed_received_brl": 0,
+  "files": [
+    "kit-controle-financeiro-autonomos.md",
+    "pagina-vendas-kit-controle-financeiro.md",
+    "modelo-movimentacoes-financeiras.csv"
+  ],
+  "next_steps": [
+    "Revisar e testar o material",
+    "Escolher uma plataforma de venda compatível",
+    "Publicar a oferta manualmente ou por integração oficial autorizada",
+    "Confirmar pagamentos por fonte externa",
+    "Conferir depósitos Binance por API somente leitura"
+  ],
+  "limitations": [
+    "Não publicado automaticamente",
+    "Nenhum comprador ou pagamento presumido",
+    "Preço sugerido não garante demanda nem renda"
+  ]
+}

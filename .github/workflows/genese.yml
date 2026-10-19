@@ -28,10 +28,12 @@ jobs:
           python-version: "3.12"
 
       - name: Validar sintaxe
-        run: python -m py_compile genese_autonomo.py priorizador_recompensas.py
+        run: python -m py_compile genese_autonomo.py priorizador_recompensas.py motor_receita.py genese_pay_web.py binance_public.py binance_account_readonly.py registro_recompensas.py
 
       - name: Testes unitários
-        run: python -m unittest discover -s tests -v
+        run: |
+          python -m unittest discover -s tests -v
+          python -m unittest -v test_binance_public
 
       - name: Executar diagnóstico externo
         shell: bash
@@ -61,6 +63,31 @@ jobs:
           fi
           exit "$code"
 
+      - name: Descobrir oportunidades públicas de receita
+        shell: bash
+        run: |
+          set +e
+          GENESE_TIMEOUT=12 GENESE_RETRIES=2 python -u motor_receita.py --json > genese_receita_stdout.json
+          code=$?
+          echo "MOTOR_RECEITA_EXIT_CODE=$code" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f genese_receita.json ]; then
+            python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          p=json.load(open("genese_receita.json", encoding="utf-8"))
+          r=p.get("resumo", {})
+          print(f"- Candidatas encontradas: {r.get('candidatas_encontradas', 0)}")
+          print(f"- Candidatas cripto/Web3: {r.get('candidatas_cripto_web3', 0)}")
+          print(f"- Fontes consultadas com sucesso: {r.get('fontes_ok', 0)}")
+          print(f"- Receita confirmada: {r.get('receita_confirmada', 0)}")
+          print(f"- Saldo Binance consultado: {r.get('saldo_binance_consultado', False)}")
+          print(f"- Transferência executada: {r.get('transferencia_executada', False)}")
+          PY
+          fi
+          exit "$code"
+
+      - name: Identificar execução real
+        run: echo "Execução GÊNESE iniciada no runner do GitHub Actions" >> "$GITHUB_STEP_SUMMARY"
+
       - name: Resumo de conectividade
         if: always()
         shell: bash
@@ -89,5 +116,7 @@ jobs:
             genese_report.json
             genese_oportunidades.json
             genese_oportunidades_stdout.json
+            genese_receita.json
+            genese_receita_stdout.json
           if-no-files-found: warn
           retention-days: 14

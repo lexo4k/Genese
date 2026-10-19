@@ -5,6 +5,7 @@ Consulta fontes públicas e autorizadas. Não explora sistemas, não acessa cont
 não inventa saldo e não executa pagamentos.
 """
 from __future__ import annotations
+
 import argparse
 import json
 import os
@@ -14,6 +15,7 @@ import sys
 import time
 from datetime import datetime, timezone
 from typing import Any
+from urllib.parse import urlparse
 
 USER_AGENT = "GENESE-Autonomo/1.1 (public-source-check)"
 TIMEOUT = max(1, int(os.environ.get("GENESE_TIMEOUT", "8")))
@@ -23,6 +25,7 @@ SOURCES = {
     "conversao_usd_brl": "https://api.frankfurter.dev/v1/latest?base=USD&symbols=BRL",
     "teste_https": "https://www.python.org/",
 }
+
 
 def fetch(url: str, timeout: int = TIMEOUT, retries: int = RETRIES) -> tuple[int, bytes]:
     last_error: Exception | None = None
@@ -54,6 +57,7 @@ def fetch(url: str, timeout: int = TIMEOUT, retries: int = RETRIES) -> tuple[int
             time.sleep(min(2 ** attempt, 4))
     raise RuntimeError(f"Falha após {retries} tentativas: {type(last_error).__name__}: {last_error}")
 
+
 def check_dns(host: str, attempts: int = RETRIES) -> dict[str, Any]:
     start = time.monotonic()
     last_error: Exception | None = None
@@ -76,6 +80,7 @@ def check_dns(host: str, attempts: int = RETRIES) -> dict[str, Any]:
             "ms": round((time.monotonic() - start) * 1000),
             "error": f"{type(last_error).__name__}: {last_error}"}
 
+
 def parse_programs(payload: str, limit: int = 30) -> list[dict[str, str]]:
     try:
         data = json.loads(payload)
@@ -83,7 +88,7 @@ def parse_programs(payload: str, limit: int = 30) -> list[dict[str, str]]:
         return []
     if isinstance(data, dict):
         data = data.get("programs", data.get("data", []))
-    if not isinstance(data, list):
+    if not isinstance(data, list) or limit <= 0:
         return []
     rows: list[dict[str, str]] = []
     seen: set[str] = set()
@@ -91,7 +96,10 @@ def parse_programs(payload: str, limit: int = 30) -> list[dict[str, str]]:
         if not isinstance(item, dict) or item.get("bounty") is not True:
             continue
         name, url = item.get("name"), item.get("url")
-        if not isinstance(name, str) or not isinstance(url, str) or not url.startswith("https://") or url in seen:
+        if not isinstance(name, str) or not name.strip() or not isinstance(url, str):
+            continue
+        parsed = urlparse(url)
+        if parsed.scheme != "https" or not parsed.hostname or url in seen:
             continue
         seen.add(url)
         domains = item.get("domains", [])
@@ -100,6 +108,7 @@ def parse_programs(payload: str, limit: int = 30) -> list[dict[str, str]]:
         if len(rows) >= limit:
             break
     return rows
+
 
 def run_once() -> dict[str, Any]:
     report: dict[str, Any] = {
@@ -148,6 +157,7 @@ def run_once() -> dict[str, Any]:
     }
     return report
 
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="GÊNESE: fontes públicas e recompensas autorizadas")
     parser.add_argument("--loop", type=int, default=0, help="repetir a cada N segundos (mínimo 60)")
@@ -172,6 +182,7 @@ def main() -> int:
         if not args.loop:
             return 0 if report["resumo"]["conectividade_externa_confirmada"] else 2
         time.sleep(args.loop)
+
 
 if __name__ == "__main__":
     try:
