@@ -1,0 +1,45 @@
+name: Build GÊNESE PAY Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["Lexo/NutriFit", "android-app-download"]
+    paths:
+      - "app/**"
+      - "*.gradle.kts"
+      - ".github/workflows/android-apk.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Configure Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+      - name: Build debug APK
+        run: gradle --no-daemon assembleDebug
+      - name: Verify APK exists
+        run: test -s app/build/outputs/apk/debug/app-debug.apk
+      - name: Upload APK for download
+        uses: actions/upload-artifact@v4
+        with:
+          name: GENESE-PAY-Android-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 30
+      - name: Build summary
+        run: |
+          echo "## GÊNESE PAY APK" >> "$GITHUB_STEP_SUMMARY"
+          echo "- APK compilado e anexado como artifact." >> "$GITHUB_STEP_SUMMARY"
+          echo "- App Android para oportunidades e registro local de rendimentos." >> "$GITHUB_STEP_SUMMARY"
+          echo "- Não gera dinheiro automaticamente nem realiza depósitos/transferências." >> "$GITHUB_STEP_SUMMARY"
