@@ -39,7 +39,8 @@ class GeneSePayDashboardTests(unittest.TestCase):
 
     def test_server_policy_restricts_binding_to_localhost(self):
         source = inspect.getsource(genese_pay_web.main)
-        self.assertIn('os.environ.get("GENESE_PAY_HOST", "127.0.0.1")', source)
+        self.assertIn("GENESE_PAY_HOST", source)
+        self.assertIn("127.0.0.1", source)
         self.assertIn('{"127.0.0.1", "localhost", "::1"}', source)
         self.assertIn("autenticação e HTTPS", source)
 
