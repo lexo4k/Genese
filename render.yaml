@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: genese-pay-api
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PORT
+        value: "10000"
+      - key: GENESE_HOST
+        value: "0.0.0.0"
+      - key: GENESE_DB_PATH
+        value: /data/genese_wallet.sqlite3
+      - key: PYTHONUNBUFFERED
+        value: "1"
+    disk:
+      name: genese-pay-data
+      mountPath: /data
+      sizeGB: 1

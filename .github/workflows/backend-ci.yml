@@ -1,0 +1,82 @@
+name: GÊNESE PAY backend CI
+on:
+  push:
+    branches: [fix/deployable-backend-binance]
+  pull_request:
+    branches: [fix/deployable-backend-binance]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Python syntax
+        run: python -m py_compile wallet_api.py mercadopago_provider.py
+      - name: Unit tests
+        run: python -m unittest discover -s tests -v
+      - name: Verify deploy config
+        run: |
+          test -s Dockerfile
+          test -s render.yaml
+          grep -q 'GENESE_HOST=0.0.0.0' Dockerfile
+          grep -q 'healthCheckPath: /health' render.yaml
+      - name: Build deployment container
+        run: docker build --tag genese-pay-ci .
+      - name: Smoke test container health endpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --detach --rm --name genese-pay-ci -p 10000:10000 -e MP_MODE=production -e MP_ACCESS_TOKEN=APP_USR_TEST_ONLY genese-pay-ci
+          cleanup() { docker stop genese-pay-ci >/dev/null 2>&1 || true; }
+          trap cleanup EXIT
+          for attempt in {1..20}; do
+            if curl --fail --silent http://127.0.0.1:10000/health > /tmp/genese-health.json; then
+              break
+            fi
+            sleep 1
+          done
+          cat /tmp/genese-health.json
+          python -c "import json; d=json.load(open('/tmp/genese-health.json')); assert d.get('ok') is True; assert d.get('mode') == 'ledger-only'; assert d.get('pix_enabled') is False; assert d.get('real_money_enabled') is False"
+          python - <<'PY'
+          import json
+          import urllib.error
+          import urllib.request
+          import uuid
+
+          base = "http://127.0.0.1:10000"
+
+          def request(path, method="GET", payload=None, token=None):
+              headers = {}
+              data = None
+              if payload is not None:
+                  data = json.dumps(payload).encode()
+                  headers["Content-Type"] = "application/json"
+              if token:
+                  headers["Authorization"] = "Bearer " + token
+              req = urllib.request.Request(base + path, data=data, headers=headers, method=method)
+              try:
+                  with urllib.request.urlopen(req, timeout=5) as response:
+                      return response.status, json.loads(response.read().decode())
+              except urllib.error.HTTPError as error:
+                  return error.code, json.loads(error.read().decode())
+
+          email = "ci-" + uuid.uuid4().hex + "@example.test"
+          password = "CI-test-password-123!"
+          status, registered = request("/api/register", "POST", {"email": email, "password": password})
+          assert status == 201, (status, registered)
+          status, login = request("/api/login", "POST", {"email": email, "password": password})
+          assert status == 200 and login.get("token"), (status, login)
+          status, wallet = request("/api/wallet", token=login["token"])
+          assert status == 200 and wallet["wallet"]["balance_cents"] == 0, (status, wallet)
+          status, disabled = request("/api/pix/charge", "POST", {"amount_cents": 100, "payer_email": email})
+          assert status == 410 and "desativada" in disabled["error"].lower(), (status, disabled)
+          status, health = request("/health")
+          assert status == 200 and health["pix_enabled"] is False, (status, health)
+          print("PASS: register/login/session/wallet, zero initial balance, checkout blocked, health ledger-only")
+          PY

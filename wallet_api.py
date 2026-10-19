@@ -154,6 +154,11 @@ class APIHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         path = urlparse(self.path).path
+        if path == "/api/pix/charges" or path.startswith("/api/pix/charges/"):
+            return self.send_json(410, {
+                "error": "Checkout Pix desativado neste projeto",
+                "detail": "O GÊNESE PAY não usa cobrança de clientes como fonte de rendimento."
+            })
         if path == "/" or path == "/index.html":
             try:
                 raw = (ROOT / "web" / "index.html").read_bytes()
@@ -168,23 +173,19 @@ class APIHandler(BaseHTTPRequestHandler):
             except OSError:
                 return self.send_json(500, {"error": "Interface web não encontrada"})
         if path == "/health":
-            mode = os.environ.get("MP_MODE", "sandbox").strip().lower()
-            token = os.environ.get("MP_ACCESS_TOKEN", "").strip()
-            configured = bool(token) and mode in ("sandbox", "production")
-            if mode == "production" and token.startswith("TEST-"):
-                configured = False
-            if mode == "sandbox" and token.startswith("APP_USR-"):
-                configured = False
+            # GÊNESE PAY não habilita checkout ou movimentação financeira por variáveis
+            # de ambiente. O backend permanece estritamente contábil até integração auditada.
             return self.send_json(200, {
-                "ok": True, "service": "GÊNESE Wallet API",
-                "mode": f"merchant-checkout-{mode}" if configured else "ledger-only",
-                "merchant_pix_checkout_enabled": configured,
-                "production_checkout_enabled": configured and mode == "production",
+                "ok": True,
+                "service": "GÊNESE PAY API",
+                "mode": "ledger-only",
+                "merchant_pix_checkout_enabled": False,
+                "production_checkout_enabled": False,
                 "real_money_enabled": False,
-                "pix_enabled": configured,
-                "provider": "mercadopago" if configured else None,
+                "pix_enabled": False,
+                "provider": None,
                 "wallet_transfers_enabled": False,
-                "note": "Checkout é pagamento ao comerciante; não credita saldo interno nem habilita saques."
+                "note": "Nenhuma cobrança, transferência ou geração de dinheiro está habilitada."
             })
         with connect_db() as db:
             user = self.current_user(db)
@@ -226,6 +227,11 @@ class APIHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         path = urlparse(self.path).path
+        if path in ("/api/pix/charge", "/api/pix/transfer", "/api/webhooks/mercadopago"):
+            return self.send_json(410, {
+                "error": "Integração de cobrança desativada",
+                "detail": "Este projeto não deve receber pagamentos de clientes via Mercado Pago nem simular saldo."
+            })
         try:
             data = self.read_json()
         except ValueError as exc:

@@ -1,0 +1,12 @@
+.git
+.github
+android
+__pycache__
+*.py[cod]
+*.sqlite3
+*.db
+.env
+.env.*
+*.keystore
+*.jks
+tests
