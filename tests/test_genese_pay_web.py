@@ -1,8 +1,12 @@
 import inspect
 import json
 import tempfile
+import threading
 import unittest
+from http.server import ThreadingHTTPServer
 from pathlib import Path
+from urllib.error import HTTPError
+from urllib.request import Request, urlopen
 from unittest.mock import patch
 
 import genese_pay_web
@@ -43,6 +47,35 @@ class GeneSePayDashboardTests(unittest.TestCase):
         self.assertIn("127.0.0.1", source)
         self.assertIn('{"127.0.0.1", "localhost", "::1"}', source)
         self.assertIn("autenticação e HTTPS", source)
+
+    def test_http_routes_serve_dashboard_status_and_empty_payer_sources(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch.object(genese_pay_web, "REPORT", Path(tmp) / "missing-report.json"), \
+                 patch.object(genese_pay_web, "PAYER_CARDS", Path(tmp) / "missing-payers.json"):
+                server = ThreadingHTTPServer(("127.0.0.1", 0), genese_pay_web.Handler)
+                thread = threading.Thread(target=server.serve_forever, daemon=True)
+                thread.start()
+                base = f"http://127.0.0.1:{server.server_port}"
+                try:
+                    with urlopen(base + "/", timeout=3) as response:
+                        html = response.read().decode("utf-8")
+                        self.assertEqual(response.status, 200)
+                    self.assertIn("GÊNESE PAY", html)
+                    with urlopen(base + "/api/status", timeout=3) as response:
+                        status = json.loads(response.read().decode("utf-8"))
+                    self.assertEqual(status["receita_confirmada_brl"], 0.0)
+                    self.assertFalse(status["binance_conectada"])
+                    with urlopen(base + "/api/payer-sources", timeout=3) as response:
+                        payers = json.loads(response.read().decode("utf-8"))
+                    self.assertEqual(payers["fichas"], [])
+                    request = Request(base + "/not-a-route")
+                    with self.assertRaises(HTTPError) as error:
+                        urlopen(request, timeout=3)
+                    self.assertEqual(error.exception.code, 404)
+                finally:
+                    server.shutdown()
+                    server.server_close()
+                    thread.join(timeout=3)
 
 
 if __name__ == "__main__":
