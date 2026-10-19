@@ -3,7 +3,7 @@ import unittest
 from pathlib import Path
 
 from genese_pay_core import (
-    load_mining_config, record_verified_income, income_summary,
+    load_mining_config, record_income_evidence, income_summary,
     probe_pool, MiningConfig,
 )
 
@@ -25,7 +25,7 @@ class MiningConfigTests(unittest.TestCase):
             load_mining_config({"GENESE_POOL_PORT": "99999"})
 
 
-class VerifiedIncomeTests(unittest.TestCase):
+class IncomeEvidenceTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.db = Path(self.tmp.name) / "ledger.sqlite3"
@@ -33,32 +33,34 @@ class VerifiedIncomeTests(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
-    def test_unverified_or_zero_income_rejected(self):
+    def test_invalid_or_zero_claim_rejected(self):
         for amount in (0, -1, True):
             with self.subTest(amount=amount):
                 with self.assertRaises(ValueError):
-                    record_verified_income("pool", "BTC", amount, "tx-1",
+                    record_income_evidence("pool", "BTC", amount, "tx-1",
                                            "https://example.com/tx/1", self.db)
 
-    def test_https_transaction_evidence_records_confirmed_income(self):
-        result = record_verified_income("pool", "BTC", 0.001, "tx-abc",
+    def test_claim_is_never_misreported_as_confirmed(self):
+        result = record_income_evidence("pool", "BTC", 0.001, "tx-abc",
                                         "https://example.com/tx/abc", self.db)
         self.assertTrue(result["recorded"])
+        self.assertEqual(result["verification_status"], "UNVERIFIED")
         summary = income_summary(self.db)
-        self.assertEqual(summary["totals"][0]["confirmed_amount"], 0.001)
-        self.assertEqual(summary["totals"][0]["transaction_count"], 1)
+        self.assertEqual(summary["unverified_claims"][0]["amount_claimed"], 0.001)
+        self.assertIsNone(summary["confirmed_income"])
+        self.assertIsNone(summary["confirmed_external_balance"])
         self.assertFalse(summary["binance_transfer_executed"])
 
-    def test_duplicate_transaction_cannot_double_count(self):
+    def test_duplicate_reference_cannot_double_count(self):
         args = ("pool", "BTC", 0.001, "same-tx", "https://example.com/tx/same")
-        record_verified_income(*args, db_path=self.db)
+        record_income_evidence(*args, db_path=self.db)
         with self.assertRaises(ValueError):
-            record_verified_income(*args, db_path=self.db)
-        self.assertEqual(income_summary(self.db)["totals"][0]["confirmed_amount"], 0.001)
+            record_income_evidence(*args, db_path=self.db)
+        self.assertEqual(len(income_summary(self.db)["unverified_claims"]), 1)
 
     def test_http_evidence_rejected(self):
         with self.assertRaises(ValueError):
-            record_verified_income("pool", "BTC", 0.001, "tx-2",
+            record_income_evidence("pool", "BTC", 0.001, "tx-2",
                                    "http://example.com/tx/2", self.db)
 
     def test_pool_probe_never_claims_mining_from_connection_alone(self):
