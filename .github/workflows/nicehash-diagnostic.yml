@@ -1,0 +1,20 @@
+name: NiceHash diagnostic syntax
+on:
+  push:
+    paths:
+      - 'tools/nicehash-stratum-check.js'
+      - '.github/workflows/nicehash-diagnostic.yml'
+  pull_request:
+    paths:
+      - 'tools/nicehash-stratum-check.js'
+      - '.github/workflows/nicehash-diagnostic.yml'
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check JavaScript syntax
+        run: node --check tools/nicehash-stratum-check.js
