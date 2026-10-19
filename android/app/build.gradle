@@ -28,9 +28,24 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
+    signingConfigs {
+        release {
+            def keystorePath = System.getenv('ANDROID_KEYSTORE_PATH')
+            def storePasswordValue = System.getenv('ANDROID_KEYSTORE_PASSWORD')
+            def aliasValue = System.getenv('ANDROID_KEY_ALIAS')
+            def keyPasswordValue = System.getenv('ANDROID_KEY_PASSWORD')
+            if (keystorePath && storePasswordValue && aliasValue && keyPasswordValue) {
+                storeFile file(keystorePath)
+                storePassword storePasswordValue
+                keyAlias aliasValue
+                keyPassword keyPasswordValue
+            }
+        }
+    }
     buildTypes {
         debug { applicationIdSuffix '.debug'; versionNameSuffix '-debug' }
         release {
+            if (System.getenv('ANDROID_KEYSTORE_PATH')) signingConfig signingConfigs.release
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
