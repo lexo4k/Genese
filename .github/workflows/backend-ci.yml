@@ -26,6 +26,9 @@ jobs:
           test -s render.yaml
           grep -q 'GENESE_HOST=0.0.0.0' Dockerfile
           grep -q 'healthCheckPath: /health' render.yaml
+          ! grep -q '/api/pix/charge' web/index.html
+          ! grep -qi 'Mercado Pago' web/index.html
+          grep -q 'Pagamentos desativados' web/index.html
       - name: Build deployment container
         run: docker build --tag genese-pay-ci .
       - name: Smoke test container health endpoint
