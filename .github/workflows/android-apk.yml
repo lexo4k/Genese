@@ -2,10 +2,10 @@ name: GENESE PAY Android APK and signed release gate
 on:
   push:
     branches: [feature/carteira-financeira-mvp]
-    paths: ['android/**', '.github/workflows/android-apk.yml']
+    paths: ['android/**', '.github/workflows/android-apk.yml', '.github/workflows/backend-ci.yml', 'wallet_api.py', 'render.yaml', 'Dockerfile']
   pull_request:
     branches: [feature/carteira-financeira-mvp]
-    paths: ['android/**', '.github/workflows/android-apk.yml']
+    paths: ['android/**', '.github/workflows/android-apk.yml', '.github/workflows/backend-ci.yml', 'wallet_api.py', 'render.yaml', 'Dockerfile']
   workflow_dispatch:
 permissions:
   contents: read
