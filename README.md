@@ -152,3 +152,14 @@ O kit começa com vendas e recebimentos confirmados em zero. Isso automatiza a p
 ## Evidências externas
 
 Consulte `EVIDENCIA_EXTERNA_E_VALIDA.md` para entender quais provas podem ser verificadas por fontes externas, o que cada uma comprova e o que continua pendente. O documento não declara vendas, registro empresarial ou depósitos inexistentes.
+
+
+## Auditoria automática das etapas e evidências
+
+O módulo `auditoria_etapas.py` gera `evidencias/status_etapas.json` e `evidencias/STATUS_ETAPAS.md`. O workflow **GENESE Wallet CI** executa o relatório após os testes e o health check, e publica os arquivos como artefato da execução por 30 dias.
+
+- [Abrir o workflow de CI](https://github.com/lexo4k/Genese/blob/feature/carteira-financeira-mvp/.github/workflows/wallet-ci.yml)
+- [Abrir o auditor de etapas](https://github.com/lexo4k/Genese/blob/feature/carteira-financeira-mvp/auditoria_etapas.py)
+- [Abrir os testes do auditor](https://github.com/lexo4k/Genese/blob/feature/carteira-financeira-mvp/tests/test_auditoria_etapas.py)
+
+As etapas são marcadas como concluídas somente quando há evidência explícita para aquela verificação. O CI pode comprovar testes e health check no runner, mas não marca como concluídos integração ponta a ponta, hospedagem pública, APK, vendas ou depósito Binance. Esses itens ficam pendentes até serem verificados de verdade.
