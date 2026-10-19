@@ -5,6 +5,8 @@ Projeto em evolução para monitoramento de conectividade, registro de evidênci
 ## Núcleo adicionado
 
 - `genese_pay_core.py`: configuração explícita de pool e verificação real de handshake TLS com o endpoint configurado.
+- `nicehash_readonly.py`: cliente autenticado **somente de leitura** para consultar dados do provedor NiceHash (rigs, não pagos e contas), usando variáveis de ambiente. Não tem endpoints de compra, saque ou alteração financeira.
+- `tests/test_nicehash_readonly.py`: valida a assinatura HMAC e bloqueia rotas fora da lista de leitura.
 - O teste de conexão de pool **não** significa que há mineração ativa. O módulo não submete shares nem inventa hashrate.
 - O livro local aceita declarações com provedor, moeda, valor positivo, referência e URL HTTPS, mas as mantém como **NÃO VERIFICADAS**. Uma URL e um identificador não provam que a transação existe.
 - Os valores declarados nunca são chamados de receita confirmada e o saldo externo fica desconhecido até existir validação direta e autenticada no provedor.
@@ -26,7 +28,7 @@ O banco SQLite local é `genese_pay.sqlite3` por padrão; use `GENESE_LEDGER_DB`
 Requisitos: Python 3.10+ e `curl`.
 
 ```bash
-python -m py_compile genese_autonomo.py priorizador_recompensas.py genese_pay_core.py
+python -m py_compile genese_autonomo.py priorizador_recompensas.py genese_pay_core.py nicehash_readonly.py
 python -m unittest discover -s tests -v
 python genese_autonomo.py --json
 python priorizador_recompensas.py > oportunidades.json
@@ -36,4 +38,4 @@ GitHub Actions executa os testes e guarda relatórios. Aprovação dos testes va
 
 ## O que ainda falta para o objetivo final
 
-A execução real de mineração requer um mecanismo de mineração compatível com hardware suportado e configuração de pool/worker; o núcleo atual apenas verifica conectividade. Também faltam uma integração autenticada com dados oficiais de ganhos do provedor, interface Android/web e fluxo de depósito verificado. Nenhuma transferência automática para Binance foi implementada.
+A execução real de mineração requer um mecanismo de mineração compatível com hardware suportado e configuração de pool/worker; o núcleo atual apenas verifica conectividade. Falta validar a integração de leitura com credenciais reais autorizadas do provedor, interpretar os campos reais de ganhos, interface Android/web e fluxo de depósito verificado. Nenhuma transferência automática para Binance foi implementada.
