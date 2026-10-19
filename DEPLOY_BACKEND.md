@@ -25,6 +25,7 @@ Uma carteira Binance recebe fundos reais quando um pagador legítimo envia cript
 - Construção da imagem Docker e teste HTTP de `/health`.
 - Teste de ponta a ponta no container para cadastro, login, sessão autenticada, carteira inicial zerada e bloqueio do endpoint antigo de cobrança.
 - Esses testes não substituem a implantação externa, teste em aparelho Android, revisão de segurança ou confirmação de recebimento real na Binance.
+- A interface web não oferece controles de cobrança Pix e não apresenta pagamentos de clientes como fonte de rendimento.
 
 ## Persistência e segurança
 - O disco é persistente; faça backup e teste recuperação antes de usar dados reais.
