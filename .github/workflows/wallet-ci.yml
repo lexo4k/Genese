@@ -24,9 +24,13 @@ jobs:
         with:
           python-version: "3.12"
       - name: Compile Python
-        run: python -m compileall -q wallet_api.py mercadopago_provider.py genese_autonomo.py priorizador_recompensas.py motor_receita.py genese_value_engine.py tests
+        run: python -m compileall -q wallet_api.py mercadopago_provider.py genese_autonomo.py priorizador_recompensas.py motor_receita.py genese_value_engine.py auditoria_etapas.py tests
       - name: Unit tests
-        run: python -m unittest discover -s tests -v
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m unittest discover -s tests -v
+          echo "GENESE_CI_TESTS_PASSED=true" >> "$GITHUB_ENV"
       - name: Health smoke test
         shell: bash
         run: |
@@ -41,3 +45,19 @@ jobs:
           done
           python -c 'import json; d=json.load(open("'"$tmpdir"'/health.json")); assert d["ok"] is True; assert d["pix_enabled"] is False; print(json.dumps(d))'
           curl --fail --silent http://127.0.0.1:8765/ | grep -q 'GÊNESE'
+          echo "GENESE_CI_HEALTH_PASSED=true" >> "$GITHUB_ENV"
+      - name: Generate evidence report
+        if: always()
+        shell: bash
+        run: |
+          python auditoria_etapas.py
+      - name: Upload evidence report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: genese-evidence-report
+          path: |
+            evidencias/status_etapas.json
+            evidencias/STATUS_ETAPAS.md
+          if-no-files-found: warn
+          retention-days: 30
