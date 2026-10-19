@@ -147,3 +147,8 @@ O kit começa com vendas e recebimentos confirmados em zero. Isso automatiza a p
 1. **Empresa:** o gerador preparar_negocio.py empresa prepara um dossiê, mas não registra empresa. A abertura deve ser feita nos canais oficiais e com os responsáveis autorizados: https://www.gov.br/empresas-e-negocios/pt-br/redesim/abrir-cnpj/
 2. **CNPJ existente:** verificador_confirmacoes_reais.py cnpj NUMERO consulta uma fonte pública de terceiros. Para verificar uma empresa específica, use um CNPJ válido e autorizado e confira o comprovante oficial. Não use exemplos fictícios como prova.
 3. **Binance:** verificador_confirmacoes_reais.py binance-deposits exige variáveis de API configuradas no próprio ambiente, com permissão somente de leitura. Nunca envie chave ou segredo pelo chat, commit, issue ou arquivo público. A consulta não transfere fundos e não prova, sozinha, que um depósito veio de uma venda do GÊNESE.
+
+
+## Evidências externas
+
+Consulte `EVIDENCIA_EXTERNA_E_VALIDA.md` para entender quais provas podem ser verificadas por fontes externas, o que cada uma comprova e o que continua pendente. O documento não declara vendas, registro empresarial ou depósitos inexistentes.
