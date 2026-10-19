@@ -17,7 +17,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Python syntax
-        run: python -m py_compile wallet_api.py mercadopago_provider.py
+        run: python -m py_compile wallet_api.py mercadopago_provider.py scripts/binance_readonly_check.py
       - name: Unit tests
         run: python -m unittest discover -s tests -v
       - name: Verify deploy config
