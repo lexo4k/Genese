@@ -32,9 +32,23 @@ O painel permanece preso a `127.0.0.1` por segurança. Não o exponha diretament
 - A configuração de endereço Binance **não** realiza transferência. Este repositório ainda não executa saque na NiceHash nem comprova depósito na Binance.
 - O código não explora contas alheias, não retira fundos de terceiros e não cria dinheiro do nada.
 
+## Validação do endereço Bitcoin de destino
+
+O módulo `btc_payout_readiness.py` valida offline o formato e o checksum de um endereço Bitcoin mainnet nativo SegWit v0 P2WPKH. Ele não consulta a carteira, não confirma quem controla o endereço e não envia fundos.
+
+Defina o endereço localmente, no ambiente do processo, sem gravá-lo no código ou no GitHub:
+
+```bash
+export GENESE_BTC_PAYOUT_ADDRESS="seu_endereco_bc1"
+python btc_payout_readiness.py
+python -m unittest discover -s tests -p 'test_btc_payout_readiness.py' -v
+```
+
+No PowerShell, use `$env:GENESE_BTC_PAYOUT_ADDRESS="seu_endereco_bc1"`. O relatório só valida o formato do endereço fornecido. Ele não adiciona o endereço à lista de saques da NiceHash, não habilita permissões financeiras e não inicia retirada. A configuração do provedor e qualquer transferência precisam ser verificadas separadamente no serviço oficial, com a rede e as taxas conferidas. Nunca reutilize chaves API que tenham sido publicadas em mensagens ou código.
+
 ## Demais módulos
 
 - `genese_dashboard.py`: interface web local com controles do processo de mineração.
 - `genese_autonomo.py` e `priorizador_recompensas.py`: diagnóstico de conectividade e organização de programas públicos de recompensa; encontrar um programa não garante recompensa.
 - `.github/workflows/genese.yml`: verificação automática de sintaxe e integridade do código. Essa automação não representa mineração ou pagamento.
-
+- `.github/workflows/btc-payout-readiness.yml`: testa a validação do endereço Bitcoin, não um saque real.
