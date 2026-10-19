@@ -1,4 +1,4 @@
-name: GENESE PAY Android APK
+name: GENESE PAY Android APK and signed release gate
 on:
   push:
     branches: [feature/carteira-financeira-mvp]
