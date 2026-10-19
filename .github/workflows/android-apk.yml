@@ -23,13 +23,21 @@ jobs:
           java-version: '17'
       - uses: gradle/actions/setup-gradle@v4
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          accept-android-sdk-licenses: true
-          packages: |
-            platform-tools
-            platforms;android-35
-            build-tools;35.0.0
+        shell: bash
+        run: |
+          set -euo pipefail
+          export ANDROID_HOME="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          echo "ANDROID_HOME=$ANDROID_HOME" >> "$GITHUB_ENV"
+          test -x "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" || {
+            echo "Android SDK command-line tools not found in runner image" >&2
+            exit 1
+          }
+          echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
+            "platform-tools" \
+            "platforms;android-35" \
+            "build-tools;35.0.0"
       - name: Verify security defaults
         run: |
           test -f android/app/src/main/AndroidManifest.xml
