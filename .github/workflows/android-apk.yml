@@ -103,15 +103,24 @@ jobs:
       ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
       ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
     steps:
-      - name: Check release configuration
+      - name: Check release configuration (fail loudly when blocked)
         id: preflight
         shell: bash
         run: |
-          missing=0
-          [[ "$GENESE_BASE_URL" =~ ^https://[^/]+ ]] || { echo "::notice::Release blocked: configure GENESE_BASE_URL with the public HTTPS backend URL."; missing=1; }
-          [[ -n "$ANDROID_KEYSTORE_BASE64" ]] || { echo "::notice::Release blocked: configure Android signing secrets in repository Actions secrets."; missing=1; }
-          [[ -n "$ANDROID_KEYSTORE_PASSWORD" && -n "$ANDROID_KEY_ALIAS" && -n "$ANDROID_KEY_PASSWORD" ]] || { echo "::notice::Release blocked: one or more signing secrets are missing."; missing=1; }
-          if (( missing )); then echo "ready=false" >> "$GITHUB_OUTPUT"; else echo "ready=true" >> "$GITHUB_OUTPUT"; fi
+          set -euo pipefail
+          missing=()
+          [[ "$GENESE_BASE_URL" =~ ^https://[^/]+ ]] || missing+=("GENESE_BASE_URL must be a public HTTPS backend URL")
+          [[ -n "$ANDROID_KEYSTORE_BASE64" ]] || missing+=("ANDROID_KEYSTORE_BASE64 is missing")
+          [[ -n "$ANDROID_KEYSTORE_PASSWORD" ]] || missing+=("ANDROID_KEYSTORE_PASSWORD is missing")
+          [[ -n "$ANDROID_KEY_ALIAS" ]] || missing+=("ANDROID_KEY_ALIAS is missing")
+          [[ -n "$ANDROID_KEY_PASSWORD" ]] || missing+=("ANDROID_KEY_PASSWORD is missing")
+          if (( ${#missing[@]} )); then
+            echo "::error title=Signed release blocked::The signed release cannot be built. Configure the required GitHub Actions secrets."
+            printf 'BLOCKER: %s\\n' "${missing[@]}"
+            echo "See ANDROID_APK_STATUS.md for the exact prerequisites. No unsigned APK will be labelled as production."
+            exit 1
+          fi
+          echo "ready=true" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@v4
         if: steps.preflight.outputs.ready == 'true'
       - uses: actions/setup-java@v4
@@ -144,7 +153,17 @@ jobs:
         if: steps.preflight.outputs.ready == 'true'
         working-directory: android
         run: gradle --no-daemon assembleRelease -PGENESE_BASE_URL="$GENESE_BASE_URL"
-      - name: Verify and upload signed release APK
+      - name: Verify signed release APK and package id
+        if: steps.preflight.outputs.ready == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK="android/app/build/outputs/apk/release/app-release.apk"
+          test -s "$APK"
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose "$APK"
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK" | grep -F "package: name='com.genese.pay'"
+          sha256sum "$APK"
+      - name: Upload signed release APK
         if: steps.preflight.outputs.ready == 'true'
         uses: actions/upload-artifact@v4
         with:
