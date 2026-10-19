@@ -3,7 +3,7 @@ name: Build GÊNESE PAY Android APK
 on:
   workflow_dispatch:
   push:
-    branches: ["Lexo/NutriFit", "android-app-download"]
+    branches: ["Lexo/NutriFit", "android-app-download", "genese-integrado"]
     paths:
       - "app/**"
       - "*.gradle.kts"
@@ -28,8 +28,10 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
+      - name: Generate Gradle 8.9 wrapper
+        run: gradle wrapper --gradle-version 8.9 --distribution-type bin
       - name: Build debug APK
-        run: gradle --no-daemon assembleDebug
+        run: ./gradlew --no-daemon assembleDebug
       - name: Verify APK exists
         run: test -s app/build/outputs/apk/debug/app-debug.apk
       - name: Upload APK for download
