@@ -19,3 +19,5 @@ services:
         sync: false
       - key: BINANCE_API_SECRET
         sync: false
+      - key: GENESE_OWNER_TOKEN
+        sync: false
