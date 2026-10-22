@@ -220,6 +220,15 @@ class Handler(BaseHTTPRequestHandler):
             self.send_json(public_state()); return
         if path == "/api/payments":
             self.send_json(payment_summary()); return
+        if path == "/api/receita":
+            mp_token = bool(os.getenv("MERCADOPAGO_ACCESS_TOKEN"))
+            mp_secret = bool(os.getenv("MERCADOPAGO_WEBHOOK_SECRET") or os.getenv("GENESE_PAYMENT_WEBHOOK_SECRET"))
+            self.send_json({"ok": True, "revenue_source_connected": False, "automatic_payout_enabled": False, "checks": [
+                {"key": "revenue_source", "ok": False, "label": "Fonte de receita", "detail": "Nenhuma fonte pagadora está conectada; o catálogo de oportunidades apenas lista links públicos."},
+                {"key": "mp_access_token", "ok": mp_token, "label": "Token do Mercado Pago", "detail": "Configurado no servidor." if mp_token else "Falta configurar MERCADOPAGO_ACCESS_TOKEN no Render."},
+                {"key": "mp_webhook_secret", "ok": mp_secret, "label": "Assinatura do webhook", "detail": "Configurada no servidor." if mp_secret else "Falta configurar MERCADOPAGO_WEBHOOK_SECRET no Render."},
+                {"key": "automatic_payout", "ok": False, "label": "Repasse automático", "detail": "Desativado: o código atual confirma pagamentos recebidos, mas não transfere rendimentos de plataformas externas."}
+            ]}); return
         if path == "/api/binance":
             owner_token = os.getenv("GENESE_OWNER_TOKEN", "")
             supplied = self.headers.get("Authorization", "")
