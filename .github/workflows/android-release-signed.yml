@@ -2,13 +2,6 @@ name: GÊNESE PAY - release Android assinada
 
 on:
   workflow_dispatch:
-  push:
-    branches: ["genese-integrado"]
-    paths:
-      - "app/**"
-      - "build.gradle.kts"
-      - "settings.gradle.kts"
-      - ".github/workflows/android-release-signed.yml"
 
 permissions:
   contents: read
