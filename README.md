@@ -82,7 +82,7 @@ A rota do buscador GÊNESE PAY é `POST /api/webhooks/mercadopago`. Ela usa o m�
 
 Configure apenas no ambiente privado do servidor:
 - `MERCADOPAGO_ACCESS_TOKEN`: Access Token privado da aplicação.
-- `MERCADOPAGO_WEBHOOK_SECRET`: assinatura secreta gerada na configuração de Webhooks do Mercado Pago.
+- `MERCADOPAGO_WEBHOOK_SECRET` (ou `GENESE_PAYMENT_WEBHOOK_SECRET`, se esse já for o nome do Secret): assinatura secreta gerada na configuração de Webhooks do Mercado Pago.
 
 Não coloque esses valores no código, APK, frontend ou repositório. O GitHub Actions Secrets só disponibiliza valores para workflows; o servidor web de produção precisa receber as variáveis no ambiente de execução dele. Não há transferência automática de recompensas de sites externos para a conta Mercado Pago: o webhook confirma apenas pagamentos que realmente existam na conta/aplicação consultada.
 
