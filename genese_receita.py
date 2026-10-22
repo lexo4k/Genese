@@ -33,7 +33,7 @@ SOURCES = [
     {"name": "Bugcrowd: programas públicos", "url": "https://www.bugcrowd.com/bug-bounty-list/"},
 ]
 SEARCH = {"running": False, "progress": 0, "message": "Pronto para buscar", "results": [], "updated_at": None, "error": None}
-LOCK = threading.Lock()
+LOCK = threading.RLock()
 
 
 def db_init():
