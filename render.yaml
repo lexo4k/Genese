@@ -3,7 +3,7 @@ services:
     name: genese-pay
     runtime: python
     plan: free
-    buildCommand: python3 -m py_compile genese_receita.py mercadopago_webhook.py
+    buildCommand: python3 -m py_compile genese_receita.py mercadopago_webhook.py binance_readonly.py
     startCommand: python3 genese_receita.py
     healthCheckPath: /health
     envVars:
