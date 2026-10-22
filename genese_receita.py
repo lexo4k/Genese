@@ -23,8 +23,8 @@ from urllib.request import Request, urlopen
 from urllib.parse import parse_qs
 from mercadopago_webhook import verify_and_fetch
 
-HOST = os.getenv("GENESE_HOST", "127.0.0.1")
-PORT = int(os.getenv("GENESE_PORT", "8766"))
+HOST = os.getenv("GENESE_HOST", "0.0.0.0")
+PORT = int(os.getenv("PORT", os.getenv("GENESE_PORT", "8766")))
 DB = Path(os.getenv("GENESE_RECEITA_DB", "genese_receita.sqlite3"))
 SOURCES = [
     {"name": "Intigriti: programas públicos", "url": "https://www.intigriti.com/researchers/bug-bounty-programs"},
