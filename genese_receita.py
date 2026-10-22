@@ -9,14 +9,11 @@ sem evidência explícita na página de origem.
 from __future__ import annotations
 
 import hashlib
-import hmac
-import html
 import json
 import os
 import re
 import sqlite3
 import threading
-import time
 from datetime import datetime, timezone
 from html.parser import HTMLParser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -29,7 +26,6 @@ from mercadopago_webhook import verify_and_fetch
 HOST = os.getenv("GENESE_HOST", "127.0.0.1")
 PORT = int(os.getenv("GENESE_PORT", "8766"))
 DB = Path(os.getenv("GENESE_RECEITA_DB", "genese_receita.sqlite3"))
-WEBHOOK_SECRET = os.getenv("GENESE_PAYMENT_WEBHOOK_SECRET", "")
 SOURCES = [
     {"name": "Intigriti: programas públicos", "url": "https://www.intigriti.com/researchers/bug-bounty-programs"},
     {"name": "Bugcrowd: programas públicos", "url": "https://www.bugcrowd.com/bug-bounty-list/"},
@@ -167,7 +163,7 @@ def payment_summary():
         rows = c.execute("SELECT provider,transaction_id,currency,amount,status,verified_at FROM payments WHERE status='CONFIRMED' ORDER BY verified_at DESC").fetchall()
     return {"confirmed_total_by_currency": _totals(rows), "confirmed_payments": [
         {"provider": r[0], "transaction_id": r[1], "currency": r[2], "amount": r[3], "status": r[4], "verified_at": r[5]} for r in rows],
-        "pending_count": pending, "note": "Só eventos com assinatura HMAC válida recebidos pelo endpoint de webhook podem ser confirmados. Sem webhook válido, receita confirmada = zero."}
+        "pending_count": pending, "note": "Só pagamentos aprovados e consultados na API oficial do Mercado Pago podem ser confirmados. Sem confirmação real, receita confirmada = zero."}
 
 
 def _totals(rows):
@@ -177,32 +173,6 @@ def _totals(rows):
     return totals
 
 
-def accept_payment_webhook(body, signature):
-    if not WEBHOOK_SECRET:
-        raise ValueError("Webhook desativado: configure GENESE_PAYMENT_WEBHOOK_SECRET no servidor.")
-    expected = hmac.new(WEBHOOK_SECRET.encode(), body, hashlib.sha256).hexdigest()
-    sig = signature.removeprefix("sha256=").strip()
-    if not hmac.compare_digest(expected, sig):
-        raise ValueError("Assinatura do webhook inválida.")
-    data = json.loads(body.decode("utf-8"))
-    # The provider must be configured to send this exact normalized event only after settlement.
-    if data.get("event") != "payment.settled":
-        return {"ok": True, "ignored": True, "reason": "Evento não representa liquidação confirmada."}
-    provider, txid = str(data.get("provider", "")).strip(), str(data.get("transaction_id", "")).strip()
-    currency = str(data.get("currency", "")).upper().strip()
-    amount = data.get("amount")
-    if not provider or not txid or not re.fullmatch(r"[A-Z]{3,8}", currency):
-        raise ValueError("Campos do pagamento incompletos.")
-    if isinstance(amount, bool) or not isinstance(amount, (int, float)) or amount <= 0:
-        raise ValueError("Valor de liquidação inválido.")
-    verified_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
-    db_init()
-    with sqlite3.connect(DB) as c:
-        c.execute("""INSERT INTO payments(provider,transaction_id,currency,amount,status,verified_at)
-            VALUES(?,?,?,?,?,?) ON CONFLICT(provider,transaction_id) DO NOTHING""",
-            (provider, txid, currency, float(amount), "CONFIRMED", verified_at))
-        c.commit()
-    return {"ok": True, "confirmed": True, "transaction_id": txid, "status": "CONFIRMED"}
 
 
 PAGE = r"""<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0b1020"><title>GÊNESE PAY</title>
@@ -213,7 +183,7 @@ PAGE = r"""<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta n
 <section class="panel hero"><button id="connect" class="mainbtn">CONECTAR E GERAR RECEITA</button><p id="message" class="muted">Toque para pesquisar diretórios públicos. A busca encontra oportunidades, não dinheiro garantido.</p><div class="track" role="progressbar" aria-label="Progresso da busca" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="bar" id="bar"></div></div><div class="row muted"><span id="progress">0% concluído</span><span id="updated">Ainda não pesquisado</span></div></section>
 <div class="stats"><section class="panel stat"><div class="muted">Links únicos encontrados</div><div class="num" id="count">0</div></section><section class="panel stat"><div class="muted">Receita confirmada</div><div class="num" id="total">R$ 0,00</div><div class="foot">Mostra apenas eventos de pagamento verificados.</div></section><section class="panel stat"><div class="muted">Pagamentos confirmados</div><div class="num" id="payments">0</div></section></div>
 <section class="panel"><h2>Oportunidades públicas</h2><p class="muted">Links deduplicados por URL canônica. Estimativas só aparecem quando uma fonte fornece valor identificável. Nenhuma estimativa é contabilizada como receita.</p><div id="results" class="muted">Nenhuma busca executada ainda.</div></section>
-<section class="panel"><h2>Como a receita é confirmada</h2><p class="muted">Encontrar um programa não gera pagamento. O valor só entra no total quando o servidor recebe um evento <code>payment.settled</code> com assinatura HMAC válida do provedor configurado. Este projeto não cria faturas para fingir receita e não movimenta dinheiro.</p><div id="paymentnote" class="muted">Carregando estado dos pagamentos…</div></section>
+<section class="panel"><h2>Como a receita é confirmada</h2><p class="muted">Encontrar uma oportunidade não gera pagamento. O valor só entra no total quando o webhook do Mercado Pago é validado e a API oficial confirma um pagamento aprovado. Isso não cria receita nem transfere recompensas de plataformas externas.</p><div id="paymentnote" class="muted">Carregando estado dos pagamentos…</div></section>
 <p class="foot">Fontes consultadas: diretórios públicos oficiais. A busca não testa ativos, não envia relatórios, não contorna regras e não garante elegibilidade ou recompensa. Respeite as regras e a idade mínima de cada oportunidade.</p>
 <script>
 const $=id=>document.getElementById(id);
