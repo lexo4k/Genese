@@ -15,7 +15,7 @@ O GÊNESE PAY pode procurar apoio financeiro recorrente para manter e melhorar o
 
 1. Coleta catálogos públicos de vagas e programas de recompensa para revisão.
 2. Gera relatórios de oportunidades, sem enviar candidaturas automaticamente.
-3. Mantém registros manuais separados de operações simuladas.
+3. Mantém registros manuais de recebimentos sem apresentá-los como verificados.
 4. Consulta saldos e depósitos Binance em modo somente leitura quando o backend está configurado com credenciais próprias e restritas a leitura.
 5. Mantém os ganhos confirmados como zero até haver evidência real. Um registro manual não é prova de pagamento.
 
@@ -30,3 +30,4 @@ A confirmação automática de patrocínios só deve ser implementada depois que
 - [ ] Valor líquido, moeda, data e estado de repasse são confirmados no relatório oficial.
 - [ ] O app registra o recebimento como verificado somente quando existe evidência confiável.
 - [ ] Qualquer transferência posterior é tratada separadamente e nunca simulada como concluída.
+\n## Decisão de integridade financeira\n\nOs controles de depósito e transferência simulados foram removidos da interface principal para não confundir testes com receita. O painel não apresenta saldo fictício como dinheiro disponível.\n
