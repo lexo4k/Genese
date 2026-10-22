@@ -22,6 +22,7 @@ class ContractorCollectorTests(unittest.TestCase):
         self.assertEqual(row["contratante"], "Example Ltd")
         self.assertEqual(row["status_candidatura"], "não enviada")
         self.assertEqual(row["idade_minima"], "não verificada; conferir no anúncio oficial")
+        self.assertIn("[preencher com habilidades reais]", row["rascunho_candidatura"])
         self.assertIsNone(row["salario_informado"])
 
     def test_report_never_invents_income_or_submits_applications(self):
