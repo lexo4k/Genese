@@ -59,6 +59,14 @@ def normalize_job(raw: dict) -> dict | None:
 
     location = str(raw.get("location") or "").strip()
     remote = bool(raw.get("remote")) or any(hint in location.lower() for hint in REMOTE_HINTS)
+    draft = (
+        f"Olá, equipe de {company}. Tenho interesse na oportunidade de {title}.\n\n"
+        "Minhas habilidades relevantes: [preencher com habilidades reais].\n"
+        "Projetos ou portfólio: [inserir links próprios, se houver].\n"
+        "Disponibilidade/localização: [preencher].\n\n"
+        "Posso compartilhar mais detalhes e confirmar o escopo, os critérios de seleção, "
+        "a remuneração e a forma de contratação. Obrigado."
+    )
     return {
         "titulo": title,
         "contratante": company,
@@ -73,10 +81,11 @@ def normalize_job(raw: dict) -> dict | None:
         "elegibilidade_no_brasil": "não verificada",
         "contrato_e_pagamento": "não verificados; confirmar antes de começar",
         "status_candidatura": "não enviada",
+        "rascunho_candidatura": draft,
         "proximo_passo": (
             "Abrir o anúncio oficial; confirmar empresa, idade mínima, país aceito, "
             "escopo, remuneração, contrato e forma/prazo de pagamento. "
-            "Enviar candidatura somente após revisão humana."
+            "Revisar o rascunho e só enviar se elegível e autorizado."
         ),
     }
 
@@ -99,7 +108,7 @@ def build_report(rows: list[dict]) -> dict:
         "limites": [
             "Vaga pública não é oferta garantida nem prova de que a empresa contratará.",
             "Idade, país, requisitos, contrato, remuneração e pagamento precisam ser confirmados no anúncio oficial.",
-            "Nenhuma candidatura ou mensagem é enviada automaticamente.",
+            "O rascunho é genérico e exige revisão; nenhuma candidatura ou mensagem é enviada automaticamente.",
             "Nenhum dado pessoal ou credencial é coletado ou transmitido.",
             "Só considerar trabalho permitido pela legislação local e pelas regras da plataforma.",
         ],
