@@ -72,7 +72,7 @@ def fetch_payment(payment_id: str) -> dict:
 
 
 def verify_and_fetch(x_signature: str, x_request_id: str, data_id: str) -> dict:
-    secret = os.getenv("MERCADOPAGO_WEBHOOK_SECRET", "")
+    secret = os.getenv("MERCADOPAGO_WEBHOOK_SECRET") or os.getenv("GENESE_PAYMENT_WEBHOOK_SECRET", "")
     if not validate_signature(x_signature, x_request_id, data_id, secret):
         raise MercadoPagoWebhookError("Invalid Mercado Pago webhook signature.")
     return fetch_payment(data_id)
