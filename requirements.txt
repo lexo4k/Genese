@@ -1,0 +1,2 @@
+# GÊNESE PAY currently uses only Python standard-library modules.
+# This file exists so Render's default Python build can run pip install -r requirements.txt.
