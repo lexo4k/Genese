@@ -50,3 +50,27 @@ A interface agora inclui manifesto PWA, ícone SVG e service worker para instala
 O painel possui uma rota `/api/binance` que consulta a API privada real da Binance para obter saldos Spot e os 20 depósitos recentes. Configure `BINANCE_API_KEY` e `BINANCE_API_SECRET` no ambiente do processo. Use uma chave API com permissões de leitura somente, sem saque e sem trading. Nunca publique as chaves nem as coloque no GitHub.
 
 A integração assina requisições com HMAC-SHA256 e mostra os valores retornados pela Binance. Sem credenciais válidas, o painel informa que não verificou. A função **não** minera, não cria receita, não movimenta fundos e não faz saque. A confirmação de saldo/deposito real não prova que o GÊNESE PAY gerou esse dinheiro.
+
+
+## Busca pública de oportunidades e confirmação de pagamentos
+
+A nova interface está em `genese_receita.py`. Ela apresenta o botão **CONECTAR E GERAR RECEITA**, acompanha o progresso, consulta diretórios públicos oficiais, remove URLs duplicadas e separa oportunidades de pagamentos recebidos.
+
+### Executar localmente
+
+```bash
+python genese_receita.py
+```
+
+Abra `http://127.0.0.1:8766`. Requer Python 3.10+ e acesso à internet. Não instala dependências externas.
+
+### Limites financeiros importantes
+
+- Um link de oportunidade não é receita e não significa elegibilidade ou pagamento garantido.
+- Não há mineração, criação de faturas para simular receita, nem saldos inventados.
+- O catálogo não estima recompensa quando não há um valor confiável explícito na fonte.
+- O total de pagamentos começa em zero e só aceita eventos normalizados `payment.settled` com assinatura HMAC válida.
+- Para ativar o endpoint de webhook, configure `GENESE_PAYMENT_WEBHOOK_SECRET` no ambiente do servidor e configure o provedor para enviar o evento normalizado com o cabeçalho `X-Genese-Signature: sha256=<HMAC-SHA256 do corpo bruto>`. O provedor precisa autenticar a liquidação real; não exponha esse endpoint sem HTTPS, proteção contra repetição e validação específica do provedor em produção.
+- O webhook é uma interface de integração genérica, não uma integração Mercado Pago pronta. O adaptador oficial do provedor ainda precisa mapear e validar eventos reais.
+
+A pesquisa limita-se a diretórios públicos e não faz varredura ativa, testes de segurança, submissões ou transações. Leia os termos, a elegibilidade e a idade mínima de cada oportunidade.
