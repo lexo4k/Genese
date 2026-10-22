@@ -22,4 +22,24 @@ android {
         versionCode = 1
         versionName = "1.0.0"
     }
+
+    signingConfigs {
+        create("release") {
+            val storePath = System.getenv("ANDROID_KEYSTORE_PATH")
+            val storePasswordValue = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+            val aliasValue = System.getenv("ANDROID_KEY_ALIAS")
+            val keyPasswordValue = System.getenv("ANDROID_KEY_PASSWORD")
+            if (!storePath.isNullOrBlank()) storeFile = file(storePath)
+            if (!storePasswordValue.isNullOrBlank()) storePassword = storePasswordValue
+            if (!aliasValue.isNullOrBlank()) keyAlias = aliasValue
+            if (!keyPasswordValue.isNullOrBlank()) keyPassword = keyPasswordValue
+        }
+    }
+
+    buildTypes {
+        getByName("release") {
+            signingConfig = signingConfigs.getByName("release")
+            isMinifyEnabled = false
+        }
+    }
 }
