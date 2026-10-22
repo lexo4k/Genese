@@ -15,10 +15,10 @@ h2{font-size:1rem;color:#b9c6e4;margin:0 0 9px}.small{font-size:.86rem}.item{bor
 @media(max-width:400px){.grid{grid-template-columns:1fr}}
 </style></head>
 <body>
-<header><h1>GÊNESE PAY</h1><p class="muted">Central de oportunidades, rendimentos comprovados e conferência de recebimentos.</p></header>
+<header><h1>GÊNESE PAY</h1><p class="muted">Central de oportunidades e organização de rendimentos e depósitos. Este app não movimenta dinheiro.</p></header>
 <div class="grid">
-<section class="card"><h2>Receita confirmada</h2><div id="earned" class="metric">R$ 0,00</div><p class="muted small">Soma somente registros que você marcou como pagos. Não é saldo bancário.</p></section>
-<section class="card"><h2>Depósitos registrados</h2><div id="deposits" class="metric">0</div><p class="muted small">Registros locais para organizar comprovantes.</p></section>
+<section class="card"><h2>Rendimentos marcados como pagos</h2><div id="earned" class="metric">R$ 0,00</div><p class="muted small">Soma registros de rendimento que você marcou como pagos. Não é saldo bancário nem confirmação automática.</p></section>
+<section class="card"><h2>Depósitos anotados</h2><div id="deposits" class="metric">0</div><p class="muted small">Contagem de anotações locais. Para confirmar um depósito, confira a transação diretamente na Binance.</p></section>
 </div>
 <section class="card"><h2>Oportunidades legítimas</h2><p class="muted">O pagamento depende de trabalho válido, elegibilidade e aprovação do contratante. O app não promete recompensa nem executa testes em sistemas.</p>
 <a class="link" href="https://hackerone.com/opportunities/all">HackerOne</a>
@@ -26,26 +26,40 @@ h2{font-size:1rem;color:#b9c6e4;margin:0 0 9px}.small{font-size:.86rem}.item{bor
 <a class="link" href="https://immunefi.com/bug-bounty/">Immunefi</a>
 <a class="link" href="https://www.upwork.com/">Serviços freelance</a>
 <p class="muted small">Confira idade mínima, regras, escopo e condições de pagamento antes de se inscrever. Teste apenas com autorização expressa.</p></section>
-<section class="card"><h2>Registrar rendimento real</h2>
-<label for="source">Fonte / contratante</label><input id="source" maxlength="100" placeholder="Ex.: serviço entregue / programa">
-<label for="amount">Valor recebido (R$)</label><input id="amount" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="0,00">
-<label for="status">Situação</label><select id="status"><option value="pending">Pendente, ainda não recebido</option><option value="paid">Pago e confirmado</option></select>
+<section class="card"><h2>Adicionar registro</h2>
+<label for="type">Tipo</label><select id="type"><option value="income">Rendimento de trabalho/recompensa</option><option value="deposit">Depósito recebido na Binance (anotação manual)</option></select>
+<label for="source">Fonte / contratante / ativo</label><input id="source" maxlength="100" placeholder="Ex.: serviço entregue ou BTC">
+<label for="amount">Valor (R$)</label><input id="amount" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="0,00">
+<label for="status">Situação</label><select id="status"><option value="pending">Pendente, ainda não recebido</option><option value="paid">Recebido e conferido por mim</option></select>
 <label for="proof">Referência do comprovante (sem senha/chaves)</label><input id="proof" maxlength="120" placeholder="ID da transação ou nota pessoal">
 <button id="add">Salvar registro</button>
+<p class="muted small">O status é informado por você. O app não consulta automaticamente o contratante, blockchain ou Binance, e não valida comprovantes.</p>
 </section>
 <section class="card"><h2>Histórico local</h2><div id="history" class="muted">Nenhum registro.</div><button class="secondary" id="export">Exportar backup JSON</button><button class="danger" id="clear">Apagar histórico local</button></section>
-<section class="card"><h2>Binance: próximo passo</h2><p class="muted">Este APK não tem acesso à sua conta e não cria depósitos. Depois de receber uma remuneração legítima, confira o depósito diretamente na Binance e registre o ID aqui. Nunca informe API secret, senha ou frase-semente neste app.</p>
+<section class="card"><h2>Binance</h2><p class="muted">Este APK não acessa sua conta, não cria depósitos e não faz saques. Depois de receber uma remuneração legítima, confira o depósito e a rede diretamente na Binance antes de anotá-lo. Nunca informe API secret, senha ou frase-semente neste app.</p>
 <a class="link" href="https://www.binance.com/en/my/wallet/account/main/deposit/crypto">Abrir Binance</a>
 </section>
-<p class="muted small">Dados salvos apenas neste aparelho. O aplicativo não minera, não transfere fundos e não cria dinheiro. Um valor só conta como pago após confirmação externa.</p>
+<p class="muted small">Dados salvos apenas neste aparelho. O aplicativo não minera, não transfere fundos e não cria dinheiro. Um registro manual não equivale a uma confirmação do provedor.</p>
 <script>
 const key='genese-pay-ledger-v1';
-const get=()=>{try{return JSON.parse(localStorage.getItem(key)||'[]')}catch{return []}};
+const get=()=>{try{const x=JSON.parse(localStorage.getItem(key)||'[]');return Array.isArray(x)?x.filter(r=>r&&typeof r==='object'):[]}catch{return []}};
 const save=x=>localStorage.setItem(key,JSON.stringify(x));
 const money=n=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n);
-function render(){const rows=get();document.getElementById('earned').textContent=money(rows.filter(x=>x.status==='paid').reduce((s,x)=>s+x.amount,0));document.getElementById('deposits').textContent=rows.filter(x=>x.type==='deposit').length;
-const h=document.getElementById('history');h.replaceChildren();if(!rows.length){h.textContent='Nenhum registro.';return}rows.slice().reverse().forEach(x=>{const d=document.createElement('div');d.className='item';d.textContent=x.date+' · '+x.source+' · '+money(x.amount)+' · '+(x.status==='paid'?'PAGO CONFIRMADO':'PENDENTE')+(x.proof?' · Ref.: '+x.proof:'');h.appendChild(d)})}
-document.getElementById('add').onclick=()=>{const source=document.getElementById('source').value.trim(),amount=Number(document.getElementById('amount').value),status=document.getElementById('status').value,proof=document.getElementById('proof').value.trim();if(!source||!Number.isFinite(amount)||amount<=0){alert('Informe uma fonte e um valor maior que zero.');return}const rows=get();rows.push({source,amount,status,proof,date:new Date().toLocaleString('pt-BR'),type:'income'});save(rows);document.getElementById('source').value='';document.getElementById('amount').value='';document.getElementById('proof').value='';render();alert('Registro salvo neste aparelho. Isso não confirma o pagamento por si só.')};
+function render(){
+ const rows=get();
+ document.getElementById('earned').textContent=money(rows.filter(x=>x.type!=='deposit'&&x.status==='paid'&&Number.isFinite(Number(x.amount))).reduce((s,x)=>s+Number(x.amount),0));
+ document.getElementById('deposits').textContent=String(rows.filter(x=>x.type==='deposit').length);
+ const h=document.getElementById('history');h.replaceChildren();
+ if(!rows.length){h.textContent='Nenhum registro.';return}
+ rows.slice().reverse().forEach(x=>{const d=document.createElement('div');d.className='item';const type=x.type==='deposit'?'DEPÓSITO ANOTADO':'RENDIMENTO';d.textContent=(x.date||'Data não informada')+' · '+type+' · '+String(x.source||'Sem fonte')+' · '+money(Number(x.amount)||0)+' · '+(x.status==='paid'?'MARCADO COMO RECEBIDO':'PENDENTE')+(x.proof?' · Ref.: '+x.proof:'');h.appendChild(d)})
+}
+document.getElementById('add').onclick=()=>{
+ const source=document.getElementById('source').value.trim(),amount=Number(document.getElementById('amount').value),status=document.getElementById('status').value,type=document.getElementById('type').value,proof=document.getElementById('proof').value.trim();
+ if(!source||!Number.isFinite(amount)||amount<=0){alert('Informe uma fonte e um valor maior que zero.');return}
+ const rows=get();rows.push({source,amount,status,proof,date:new Date().toLocaleString('pt-BR'),type});save(rows);
+ document.getElementById('source').value='';document.getElementById('amount').value='';document.getElementById('proof').value='';render();
+ alert('Registro salvo somente neste aparelho. O status não foi verificado automaticamente.');
+};
 document.getElementById('export').onclick=()=>{const blob=new Blob([JSON.stringify(get(),null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='genese-pay-backup.json';a.click();URL.revokeObjectURL(url)};
 document.getElementById('clear').onclick=()=>{if(confirm('Apagar todo o histórico salvo neste aparelho?')){localStorage.removeItem(key);render()}};
 render();
