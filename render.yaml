@@ -3,8 +3,8 @@ services:
     name: genese-pay
     runtime: python
     plan: free
-    buildCommand: python -m py_compile genese_receita.py mercadopago_webhook.py
-    startCommand: python genese_receita.py
+    buildCommand: python3 -m py_compile genese_receita.py mercadopago_webhook.py
+    startCommand: python3 genese_receita.py
     healthCheckPath: /health
     envVars:
       - key: GENESE_HOST
