@@ -1,66 +1,72 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="color-scheme" content="dark">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark">
 <title>GÊNESE PAY</title>
 <style>
-:root{font-family:system-ui,sans-serif;color:#f3f6ff;background:#0b1020}*{box-sizing:border-box}body{margin:0;padding:18px;max-width:760px;margin:auto}
-header{padding:16px 0 10px}h1{font-size:2rem;margin:0;letter-spacing:.04em}.muted{color:#aab8d8;line-height:1.5}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.card{background:#151d33;border:1px solid #2a3654;border-radius:15px;padding:15px;margin:12px 0;min-width:0}.metric{font-size:1.35rem;font-weight:800;overflow-wrap:anywhere}
-button,.link{display:inline-block;background:#b8f36b;color:#17220b;border:0;border-radius:9px;padding:11px 13px;font-weight:750;text-decoration:none;margin:5px 4px 4px 0}
-input,select{display:block;width:100%;padding:12px;margin:7px 0 12px;border-radius:8px;border:1px solid #445171;background:#0d1427;color:#fff;font-size:1rem}
-button.secondary{background:#273653;color:#fff}button.danger{background:#f3a5a5;color:#351111}
-h2{font-size:1rem;color:#b9c6e4;margin:0 0 9px}.small{font-size:.86rem}.item{border-top:1px solid #2a3654;padding:10px 0;overflow-wrap:anywhere}
-@media(max-width:400px){.grid{grid-template-columns:1fr}}
+:root{font-family:system-ui,sans-serif;color:#f3f6ff;background:#0b1020}*{box-sizing:border-box}body{margin:0;padding:18px;max-width:760px;margin:auto}header{padding:16px 0 10px}h1{font-size:2rem;margin:0;letter-spacing:.04em}.muted{color:#aab8d8;line-height:1.5}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.card{background:#151d33;border:1px solid #2a3654;border-radius:15px;padding:15px;margin:12px 0;min-width:0}.metric{font-size:1.35rem;font-weight:800;overflow-wrap:anywhere}button,.link{display:inline-block;background:#b8f36b;color:#17220b;border:0;border-radius:9px;padding:11px 13px;font-weight:750;text-decoration:none;margin:5px 4px 4px 0}input,select{display:block;width:100%;padding:12px;margin:7px 0 12px;border-radius:8px;border:1px solid #445171;background:#0d1427;color:#fff;font-size:1rem}button.secondary{background:#273653;color:#fff}button.danger{background:#f3a5a5;color:#351111}h2{font-size:1rem;color:#b9c6e4;margin:0 0 9px}.small{font-size:.86rem}.item{border-top:1px solid #2a3654;padding:10px 0;overflow-wrap:anywhere}.warning{border:1px solid #f2bd57;background:#332812;color:#ffe5a8;border-radius:10px;padding:12px;font-weight:700}@media(max-width:400px){.grid{grid-template-columns:1fr}}
 </style></head>
 <body>
-<header><h1>GÊNESE PAY</h1><p class="muted">Central de oportunidades e organização de rendimentos e depósitos. Este app não movimenta dinheiro.</p></header>
+<header><h1>GÊNESE PAY</h1><p class="muted">Painel de oportunidades, controle de recebimentos e testes financeiros.</p><div class="warning">MODO DE SIMULAÇÃO: valores e transferências simulados não são dinheiro real, não são depósitos Binance e não saem deste aparelho.</div></header>
 <div class="grid">
-<section class="card"><h2>Rendimentos marcados como pagos</h2><div id="earned" class="metric">R$ 0,00</div><p class="muted small">Soma registros de rendimento que você marcou como pagos. Não é saldo bancário nem confirmação automática.</p></section>
-<section class="card"><h2>Depósitos anotados</h2><div id="deposits" class="metric">0</div><p class="muted small">Contagem de anotações locais. Para confirmar um depósito, confira a transação diretamente na Binance.</p></section>
+<section class="card"><h2>Receita real anotada</h2><div id="earned" class="metric">R$ 0,00</div><p class="muted small">Registros manuais marcados como recebidos. Ainda não verificados pelo banco ou contratante.</p></section>
+<section class="card"><h2>Saldo simulado</h2><div id="simBalance" class="metric">R$ 0,00</div><p class="muted small">Ambiente separado para testar o fluxo. Não representa saldo bancário ou criptoativo.</p></section>
 </div>
-<section class="card"><h2>Oportunidades legítimas</h2><p class="muted">O pagamento depende de trabalho válido, elegibilidade e aprovação do contratante. O app não promete recompensa nem executa testes em sistemas.</p>
-<a class="link" href="https://hackerone.com/opportunities/all">HackerOne</a>
-<a class="link" href="https://bugcrowd.com/programs">Bugcrowd</a>
-<a class="link" href="https://immunefi.com/bug-bounty/">Immunefi</a>
-<a class="link" href="https://www.upwork.com/">Serviços freelance</a>
-<p class="muted small">Confira idade mínima, regras, escopo e condições de pagamento antes de se inscrever. Teste apenas com autorização expressa.</p></section>
-<section class="card"><h2>Adicionar registro</h2>
-<label for="type">Tipo</label><select id="type"><option value="income">Rendimento de trabalho/recompensa</option><option value="deposit">Depósito recebido na Binance (anotação manual)</option></select>
-<label for="source">Fonte / contratante / ativo</label><input id="source" maxlength="100" placeholder="Ex.: serviço entregue ou BTC">
+<section class="card"><h2>Oportunidades legítimas</h2><p class="muted">O pagamento depende de trabalho válido, elegibilidade e aprovação do contratante. Não são garantidos ganhos.</p>
+<a class="link" href="https://hackerone.com/opportunities/all">HackerOne</a><a class="link" href="https://bugcrowd.com/programs">Bugcrowd</a><a class="link" href="https://immunefi.com/bug-bounty/">Immunefi</a><a class="link" href="https://www.upwork.com/">Serviços freelance</a>
+<p class="muted small">Verifique idade mínima, escopo, regras e pagamento antes de participar. Teste apenas com autorização expressa.</p></section>
+<section class="card"><h2>Registrar atividade real (manual)</h2>
+<label for="source">Fonte / contratante</label><input id="source" maxlength="100" placeholder="Ex.: serviço entregue">
 <label for="amount">Valor (R$)</label><input id="amount" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="0,00">
-<label for="status">Situação</label><select id="status"><option value="pending">Pendente, ainda não recebido</option><option value="paid">Recebido e conferido por mim</option></select>
-<label for="proof">Referência do comprovante (sem senha/chaves)</label><input id="proof" maxlength="120" placeholder="ID da transação ou nota pessoal">
-<button id="add">Salvar registro</button>
-<p class="muted small">O status é informado por você. O app não consulta automaticamente o contratante, blockchain ou Binance, e não valida comprovantes.</p>
+<label for="status">Situação declarada</label><select id="status"><option value="pending">Pendente</option><option value="paid">Recebido (marcado manualmente)</option></select>
+<label for="proof">Referência (sem senhas/chaves)</label><input id="proof" maxlength="120" placeholder="ID da transação ou nota">
+<button id="add">Salvar registro real manual</button><p class="muted small">O aplicativo não valida automaticamente o pagamento; “recebido” significa que foi marcado por você.</p>
 </section>
-<section class="card"><h2>Histórico local</h2><div id="history" class="muted">Nenhum registro.</div><button class="secondary" id="export">Exportar backup JSON</button><button class="danger" id="clear">Apagar histórico local</button></section>
-<section class="card"><h2>Binance</h2><p class="muted">Este APK não acessa sua conta, não cria depósitos e não faz saques. Depois de receber uma remuneração legítima, confira o depósito e a rede diretamente na Binance antes de anotá-lo. Nunca informe API secret, senha ou frase-semente neste app.</p>
-<a class="link" href="https://www.binance.com/en/my/wallet/account/main/deposit/crypto">Abrir Binance</a>
+<section class="card"><h2>Laboratório financeiro simulado</h2><p class="muted">Use para testar saldo, taxas, histórico e estados de transferência. Nenhuma chamada à Binance é feita.</p>
+<label for="simAmount">Valor de teste (R$)</label><input id="simAmount" type="number" min="0.01" max="1000000" step="0.01" inputmode="decimal" placeholder="Ex.: 10,00">
+<button id="simDeposit">Criar depósito SIMULADO</button><button class="secondary" id="simTransfer">Simular envio para Binance</button>
+<div id="simStatus" class="muted small" role="status">Nenhuma operação simulada.</div>
+<div id="simHistory" class="muted small"></div>
+<button class="danger" id="clearSim">Limpar simulação</button>
 </section>
-<p class="muted small">Dados salvos apenas neste aparelho. O aplicativo não minera, não transfere fundos e não cria dinheiro. Um registro manual não equivale a uma confirmação do provedor.</p>
+<section class="card"><h2>Histórico de registros reais manuais</h2><div id="history" class="muted">Nenhum registro.</div><button class="secondary" id="export">Exportar backup JSON</button><button class="danger" id="clear">Apagar histórico manual</button></section>
+<section class="card"><h2>Binance: caminho real</h2><p class="muted">Este APK ainda não envia fundos. Para um fluxo real, primeiro deve existir pagamento confirmado por uma fonte legítima, depois um provedor autorizado de pagamento/saque e a verificação de rede, ativo, titularidade e permissões. Nunca coloque API secret, senha ou frase-semente neste app.</p><a class="link" href="https://www.binance.com/en/my/wallet/account/main/deposit/crypto">Abrir Binance</a></section>
+<p class="muted small">Registros locais podem ser apagados ao limpar os dados do app. Simulações são armazenadas separadamente e nunca contam como receita real ou depósito confirmado.</p>
 <script>
-const key='genese-pay-ledger-v1';
-const get=()=>{try{const x=JSON.parse(localStorage.getItem(key)||'[]');return Array.isArray(x)?x.filter(r=>r&&typeof r==='object'):[]}catch{return []}};
-const save=x=>localStorage.setItem(key,JSON.stringify(x));
+const key='genese-pay-ledger-v1',simKey='genese-pay-simulation-v1';
+const get=(k)=>{try{const x=JSON.parse(localStorage.getItem(k)||'[]');return Array.isArray(x)?x.filter(r=>r&&typeof r==='object'):[]}catch{return []}};
+const save=(k,x)=>localStorage.setItem(k,JSON.stringify(x));
 const money=n=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n);
+const val=id=>Number(document.getElementById(id).value);
 function render(){
- const rows=get();
- document.getElementById('earned').textContent=money(rows.filter(x=>x.type!=='deposit'&&x.status==='paid'&&Number.isFinite(Number(x.amount))).reduce((s,x)=>s+Number(x.amount),0));
- document.getElementById('deposits').textContent=String(rows.filter(x=>x.type==='deposit').length);
+ const rows=get(key),sims=get(simKey);
+ document.getElementById('earned').textContent=money(rows.filter(x=>x.status==='paid'&&Number.isFinite(Number(x.amount))).reduce((s,x)=>s+Number(x.amount),0));
+ document.getElementById('simBalance').textContent=money(sims.reduce((s,x)=>s+(x.kind==='deposit'?Number(x.amount):-Number(x.amount)),0));
  const h=document.getElementById('history');h.replaceChildren();
- if(!rows.length){h.textContent='Nenhum registro.';return}
- rows.slice().reverse().forEach(x=>{const d=document.createElement('div');d.className='item';const type=x.type==='deposit'?'DEPÓSITO ANOTADO':'RENDIMENTO';d.textContent=(x.date||'Data não informada')+' · '+type+' · '+String(x.source||'Sem fonte')+' · '+money(Number(x.amount)||0)+' · '+(x.status==='paid'?'MARCADO COMO RECEBIDO':'PENDENTE')+(x.proof?' · Ref.: '+x.proof:'');h.appendChild(d)})
+ if(!rows.length)h.textContent='Nenhum registro.';
+ rows.slice().reverse().forEach(x=>{const d=document.createElement('div');d.className='item';d.textContent=(x.date||'Data não informada')+' · RENDIMENTO MANUAL · '+String(x.source||'Sem fonte')+' · '+money(Number(x.amount)||0)+' · '+(x.status==='paid'?'MARCADO COMO RECEBIDO':'PENDENTE')+(x.proof?' · Ref.: '+x.proof:'');h.appendChild(d)});
+ const sh=document.getElementById('simHistory');sh.replaceChildren();
+ if(!sims.length)sh.textContent='Nenhuma operação simulada.';
+ sims.slice().reverse().forEach(x=>{const d=document.createElement('div');d.className='item';d.textContent=x.date+' · '+(x.kind==='deposit'?'DEPÓSITO SIMULADO':'TRANSFERÊNCIA SIMULADA, NÃO ENVIADA')+' · '+money(Number(x.amount)||0)+' · TESTE LOCAL';sh.appendChild(d)});
 }
 document.getElementById('add').onclick=()=>{
- const source=document.getElementById('source').value.trim(),amount=Number(document.getElementById('amount').value),status=document.getElementById('status').value,type=document.getElementById('type').value,proof=document.getElementById('proof').value.trim();
+ const source=document.getElementById('source').value.trim(),amount=val('amount'),status=document.getElementById('status').value,proof=document.getElementById('proof').value.trim();
  if(!source||!Number.isFinite(amount)||amount<=0){alert('Informe uma fonte e um valor maior que zero.');return}
- const rows=get();rows.push({source,amount,status,proof,date:new Date().toLocaleString('pt-BR'),type});save(rows);
- document.getElementById('source').value='';document.getElementById('amount').value='';document.getElementById('proof').value='';render();
- alert('Registro salvo somente neste aparelho. O status não foi verificado automaticamente.');
+ const rows=get(key);rows.push({source,amount,status,proof,date:new Date().toLocaleString('pt-BR'),kind:'manual'});save(key,rows);
+ ['source','amount','proof'].forEach(id=>document.getElementById(id).value='');render();alert('Registro manual salvo. O pagamento não foi verificado pelo app.');
 };
-document.getElementById('export').onclick=()=>{const blob=new Blob([JSON.stringify(get(),null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='genese-pay-backup.json';a.click();URL.revokeObjectURL(url)};
-document.getElementById('clear').onclick=()=>{if(confirm('Apagar todo o histórico salvo neste aparelho?')){localStorage.removeItem(key);render()}};
+document.getElementById('simDeposit').onclick=()=>{
+ const amount=val('simAmount');if(!Number.isFinite(amount)||amount<=0||amount>1000000){alert('Informe um valor de teste entre R$ 0,01 e R$ 1.000.000.');return}
+ const sims=get(simKey);sims.push({kind:'deposit',amount,date:new Date().toLocaleString('pt-BR'),simulation:true});save(simKey,sims);document.getElementById('simStatus').textContent='Depósito simulado criado localmente. Nenhum dinheiro foi recebido.';render();
+};
+document.getElementById('simTransfer').onclick=()=>{
+ const amount=val('simAmount');if(!Number.isFinite(amount)||amount<=0){alert('Informe um valor de teste maior que zero.');return}
+ const sims=get(simKey),balance=sims.reduce((s,x)=>s+(x.kind==='deposit'?Number(x.amount):-Number(x.amount)),0);
+ if(amount>balance){document.getElementById('simStatus').textContent='Teste bloqueado: saldo simulado insuficiente. Crie primeiro um depósito simulado maior ou igual ao valor.';return}
+ sims.push({kind:'transfer',amount,date:new Date().toLocaleString('pt-BR'),simulation:true,destination:'Binance (simulado)',status:'não enviado'});save(simKey,sims);document.getElementById('simStatus').textContent='Transferência simulada registrada para testar o fluxo. NADA foi enviado à Binance.';render();
+};
+document.getElementById('export').onclick=()=>{const blob=new Blob([JSON.stringify(get(key),null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='genese-pay-registros-manuais.json';a.click();URL.revokeObjectURL(url)};
+document.getElementById('clear').onclick=()=>{if(confirm('Apagar os registros manuais deste aparelho?')){localStorage.removeItem(key);render()}};
+document.getElementById('clearSim').onclick=()=>{if(confirm('Apagar todas as operações simuladas?')){localStorage.removeItem(simKey);document.getElementById('simStatus').textContent='Simulação limpa.';render()}};
 render();
 </script></body></html>
