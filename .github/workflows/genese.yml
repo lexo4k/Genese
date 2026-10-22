@@ -2,6 +2,7 @@ name: GENESE - testes externos
 
 on:
   workflow_dispatch:
+  pull_request:
   push:
     branches: ["**"]
   schedule:
@@ -28,7 +29,7 @@ jobs:
           python-version: "3.12"
 
       - name: Validar sintaxe
-        run: python -m py_compile genese_autonomo.py priorizador_recompensas.py genese_pay_core.py nicehash_readonly.py genese_miner_runtime.py genese_dashboard.py
+        run: python -m py_compile genese_autonomo.py priorizador_recompensas.py contratantes_publicos.py genese_pay_core.py nicehash_readonly.py genese_miner_runtime.py genese_dashboard.py
 
       - name: Testes unitários
         run: python -m unittest discover -s tests -v
@@ -61,6 +62,24 @@ jobs:
           fi
           exit "$code"
 
+      - name: Coletar vagas públicas de contratantes
+        shell: bash
+        run: |
+          set +e
+          GENESE_TIMEOUT=15 python -u contratantes_publicos.py > genese_contratantes_stdout.json
+          code=$?
+          echo "CONTRATANTES_EXIT_CODE=$code" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f genese_contratantes.json ]; then
+            python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          p=json.load(open("genese_contratantes.json", encoding="utf-8"))
+          print(f"- Anúncios públicos relevantes: {p.get('anuncios_relevantes', 0)}")
+          print("- Candidaturas enviadas: 0 (exigem revisão e autorização)")
+          print("- Ganhos confirmados: 0 (não presumidos)")
+          PY
+          fi
+          exit "$code"
+
       - name: Resumo de conectividade
         if: always()
         shell: bash
@@ -89,5 +108,7 @@ jobs:
             genese_report.json
             genese_oportunidades.json
             genese_oportunidades_stdout.json
+            genese_contratantes.json
+            genese_contratantes_stdout.json
           if-no-files-found: warn
           retention-days: 14
