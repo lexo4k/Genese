@@ -35,13 +35,11 @@ const val=id=>Number(document.getElementById(id).value);
 function render(){
  const rows=get(key);
  document.getElementById('earned').textContent=money(rows.filter(x=>x.status==='paid'&&Number.isFinite(Number(x.amount))).reduce((s,x)=>s+Number(x.amount),0));
- document.getElementById('simBalance').textContent=money(sims.reduce((s,x)=>s+(x.kind==='deposit'?Number(x.amount):-Number(x.amount)),0));
+
  const h=document.getElementById('history');h.replaceChildren();
  if(!rows.length)h.textContent='Nenhum registro.';
  rows.slice().reverse().forEach(x=>{const d=document.createElement('div');d.className='item';d.textContent=(x.date||'Data não informada')+' · RENDIMENTO MANUAL · '+String(x.source||'Sem fonte')+' · '+money(Number(x.amount)||0)+' · '+(x.status==='paid'?'MARCADO COMO RECEBIDO (NÃO VERIFICADO)':'PENDENTE')+(x.proof?' · Ref.: '+x.proof:'');h.appendChild(d)});
- const sh=document.getElementById('simHistory');sh.replaceChildren();
- if(!sims.length)sh.textContent='Nenhuma operação simulada.';
- sims.slice().reverse().forEach(x=>{const d=document.createElement('div');d.className='item';d.textContent=x.date+' · '+(x.kind==='deposit'?'DEPÓSITO SIMULADO':'TRANSFERÊNCIA SIMULADA, NÃO ENVIADA')+' · '+money(Number(x.amount)||0)+' · TESTE LOCAL';sh.appendChild(d)});
+
 }
 document.getElementById('add').onclick=()=>{
  const source=document.getElementById('source').value.trim(),amount=val('amount'),status=document.getElementById('status').value,proof=document.getElementById('proof').value.trim();
@@ -51,6 +49,6 @@ document.getElementById('add').onclick=()=>{
 };
 document.getElementById('export').onclick=()=>{const blob=new Blob([JSON.stringify(get(key),null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='genese-pay-registros-manuais.json';a.click();URL.revokeObjectURL(url)};
 document.getElementById('clear').onclick=()=>{if(confirm('Apagar os registros manuais deste aparelho?')){localStorage.removeItem(key);render()}};
-document.getElementById('clearSim').onclick=()=>{if(confirm('Apagar todas as operações simuladas?')){localStorage.removeItem(simKey);document.getElementById('simStatus').textContent='Simulação limpa.';render()}};
+
 render();
 </script></body></html>
