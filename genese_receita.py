@@ -23,6 +23,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urljoin, urlparse, urldefrag
 from urllib.request import Request, urlopen
+from urllib.parse import parse_qs
+from mercadopago_webhook import verify_and_fetch
 
 HOST = os.getenv("GENESE_HOST", "127.0.0.1")
 PORT = int(os.getenv("GENESE_PORT", "8766"))
@@ -251,13 +253,24 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         if urlparse(self.path).path == "/api/search":
             self.send_json(start_search()); return
-        if urlparse(self.path).path == "/api/webhooks/payment":
+        parsed = urlparse(self.path)
+        if parsed.path == "/api/webhooks/mercadopago":
             length = min(int(self.headers.get("Content-Length", "0")), 65536)
             body = self.rfile.read(length)
             try:
-                result = accept_payment_webhook(body, self.headers.get("X-Genese-Signature", ""))
+                payload = json.loads(body.decode("utf-8"))
+                data_id = str(payload.get("data", {}).get("id", "") or parse_qs(parsed.query).get("data.id", [""])[0])
+                if str(payload.get("type", "")).lower() not in ("payment", "payments") or not data_id:
+                    self.send_json({"ok": True, "ignored": True})
+                    return
+                result = verify_and_fetch(self.headers.get("X-Signature", ""), self.headers.get("X-Request-Id", ""), data_id)
+                if result.get("confirmed"):
+                    db_init()
+                    with sqlite3.connect(DB) as c:
+                        c.execute("INSERT INTO payments(provider,transaction_id,currency,amount,status,verified_at) VALUES(?,?,?,?,?,?) ON CONFLICT(provider,transaction_id) DO NOTHING", ("mercadopago", result["transaction_id"], result["currency"], result["amount"], "CONFIRMED", datetime.now(timezone.utc).isoformat(timespec="seconds")))
+                        c.commit()
                 self.send_json(result)
-            except (ValueError, json.JSONDecodeError) as exc:
+            except (ValueError, json.JSONDecodeError, OSError) as exc:
                 self.send_json({"ok": False, "error": str(exc)}, 400)
             return
         self.send_json({"ok": False, "error": "not_found"}, 404)
