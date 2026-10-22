@@ -61,6 +61,7 @@ def read_account_and_deposits(env: dict[str, str] | None = None,
             "ok": False,
             "status": "credentials_missing",
             "required_environment": ["BINANCE_API_KEY", "BINANCE_API_SECRET"],
+            "withdrawals_enabled_by_this_app": False,
             "note": "Nenhuma chamada privada foi feita. Configure uma chave Binance com permissões somente de leitura.",
         }
     key, secret = creds
