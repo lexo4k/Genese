@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: genese-pay
+    runtime: python
+    plan: free
+    buildCommand: python -m py_compile genese_receita.py mercadopago_webhook.py
+    startCommand: python genese_receita.py
+    healthCheckPath: /health
+    envVars:
+      - key: GENESE_HOST
+        value: 0.0.0.0
+      - key: GENESE_RECEITA_DB
+        value: /tmp/genese_receita.sqlite3
+      - key: MERCADOPAGO_ACCESS_TOKEN
+        sync: false
+      - key: MERCADOPAGO_WEBHOOK_SECRET
+        sync: false

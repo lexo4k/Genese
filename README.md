@@ -50,3 +50,40 @@ A interface agora inclui manifesto PWA, ícone SVG e service worker para instala
 O painel possui uma rota `/api/binance` que consulta a API privada real da Binance para obter saldos Spot e os 20 depósitos recentes. Configure `BINANCE_API_KEY` e `BINANCE_API_SECRET` no ambiente do processo. Use uma chave API com permissões de leitura somente, sem saque e sem trading. Nunca publique as chaves nem as coloque no GitHub.
 
 A integração assina requisições com HMAC-SHA256 e mostra os valores retornados pela Binance. Sem credenciais válidas, o painel informa que não verificou. A função **não** minera, não cria receita, não movimenta fundos e não faz saque. A confirmação de saldo/deposito real não prova que o GÊNESE PAY gerou esse dinheiro.
+
+
+## Busca pública de oportunidades e confirmação de pagamentos
+
+A nova interface está em `genese_receita.py`. Ela apresenta o botão **CONECTAR E GERAR RECEITA**, acompanha o progresso, consulta diretórios públicos oficiais, remove URLs duplicadas e separa oportunidades de pagamentos recebidos.
+
+### Executar localmente
+
+```bash
+python genese_receita.py
+```
+
+Abra `http://127.0.0.1:8766`. Requer Python 3.10+ e acesso à internet. Não instala dependências externas.
+
+### Limites financeiros importantes
+
+- Um link de oportunidade não é receita e não significa elegibilidade ou pagamento garantido.
+- Não há mineração, criação de faturas para simular receita, nem saldos inventados.
+- O catálogo não estima recompensa quando não há um valor confiável explícito na fonte.
+- O total de pagamentos começa em zero e só aceita eventos normalizados `payment.settled` com assinatura HMAC válida.
+- Para ativar o endpoint de webhook, configure `GENESE_PAYMENT_WEBHOOK_SECRET` no ambiente do servidor e configure o provedor para enviar o evento normalizado com o cabeçalho `X-Genese-Signature: sha256=<HMAC-SHA256 do corpo bruto>`. O provedor precisa autenticar a liquidação real; não exponha esse endpoint sem HTTPS, proteção contra repetição e validação específica do provedor em produção.
+- O webhook é uma interface de integração genérica, não uma integração Mercado Pago pronta. O adaptador oficial do provedor ainda precisa mapear e validar eventos reais.
+
+A pesquisa limita-se a diretórios públicos e não faz varredura ativa, testes de segurança, submissões ou transações. Leia os termos, a elegibilidade e a idade mínima de cada oportunidade.
+
+
+## Integração Mercado Pago (webhook de pagamentos reais)
+
+A rota do buscador GÊNESE PAY é `POST /api/webhooks/mercadopago`. Ela usa o módulo `mercadopago_webhook.py` para validar o cabeçalho `x-signature` e consultar `GET /v1/payments/{id}` na API oficial. O valor e o status são lidos da resposta do Mercado Pago, nunca do JSON recebido no webhook. Só pagamentos com status `approved` são registrados como confirmados, com deduplicação por provedor e ID da transação.
+
+Configure apenas no ambiente privado do servidor:
+- `MERCADOPAGO_ACCESS_TOKEN`: Access Token privado da aplicação.
+- `MERCADOPAGO_WEBHOOK_SECRET` (ou `GENESE_PAYMENT_WEBHOOK_SECRET`, se esse já for o nome do Secret): assinatura secreta gerada na configuração de Webhooks do Mercado Pago.
+
+Não coloque esses valores no código, APK, frontend ou repositório. O GitHub Actions Secrets só disponibiliza valores para workflows; o servidor web de produção precisa receber as variáveis no ambiente de execução dele. Não há transferência automática de recompensas de sites externos para a conta Mercado Pago: o webhook confirma apenas pagamentos que realmente existam na conta/aplicação consultada.
+
+Antes de produção, implante em um servidor HTTPS público, configure essa URL na aplicação Mercado Pago, habilite eventos de pagamento e valide a entrega usando credenciais de teste. Esta alteração não publica nem implanta o servidor por si só. A integração também não cria receita, cobranças ou transferências. Consulte a documentação oficial: https://www.mercadopago.com.br/developers/pt/docs/your-integrations/notifications/webhooks
