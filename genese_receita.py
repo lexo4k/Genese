@@ -244,7 +244,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json({"ok": False, "status": "provider_error", "error": str(exc), "withdrawals_enabled_by_this_app": False}, 502)
             return
         if path == "/health":
-            self.send_json({"ok": True, "service": "genese-public-opportunities", "real_money_enabled": False, "wallet_transfers_enabled": False}); return
+            self.send_json({"ok": True, "service": "genese-pay", "app": "GÊNESE PAY", "health": "ok", "revenue_source_connected": False, "automatic_payout_enabled": False, "real_money_enabled": False, "wallet_transfers_enabled": False}); return
         self.send_json({"ok": False, "error": "not_found"}, 404)
 
     def do_POST(self):
