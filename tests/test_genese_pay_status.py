@@ -14,9 +14,13 @@ class GenesePayStatusTests(unittest.TestCase):
         self.db = Path(self.tmp.name) / "test.sqlite3"
         self.db_patch = patch.object(genese_receita, "DB", self.db)
         self.db_patch.start()
+        self.original_search = dict(genese_receita.SEARCH)
+        genese_receita.SEARCH.update(running=False, progress=0, message="Pronto para buscar", results=[], updated_at=None, error=None)
         genese_receita.db_init()
 
     def tearDown(self):
+        genese_receita.SEARCH.clear()
+        genese_receita.SEARCH.update(self.original_search)
         self.db_patch.stop()
         self.tmp.cleanup()
 
