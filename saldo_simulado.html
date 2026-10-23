@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0b1020">
+<title>GÊNESE PAY · Simulador de saldo</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui, sans-serif;background:#0b1020;color:#eef3ff}
+*{box-sizing:border-box}body{max-width:620px;margin:0 auto;padding:22px}
+.card{background:#151d33;border:1px solid #34415f;border-radius:22px;padding:22px;margin:18px 0}
+.tag{display:inline-block;border-radius:99px;padding:7px 12px;background:#493817;color:#ffe2a2;font-weight:800;font-size:.8rem}
+h1{font-size:1.8rem;margin-bottom:6px}.balance{font-size:2.7rem;font-weight:850;margin:18px 0 4px}
+.muted{color:#b1bdd5;line-height:1.55}.btn{width:100%;padding:14px;margin-top:10px;border:0;border-radius:12px;background:#b8f36b;color:#14200b;font-size:1rem;font-weight:800}
+.btn.secondary{background:#293550;color:#eef3ff}.warning{border-left:4px solid #ffc857;padding-left:12px}
+</style>
+</head>
+<body>
+<h1>GÊNESE PAY</h1>
+<p class="muted">Ambiente local de demonstração</p>
+<section class="card">
+<span class="tag">SALDO FICTÍCIO · TESTE</span>
+<div class="balance" id="balance">R$ 10,00</div>
+<p class="muted">Este valor existe somente nesta tela de demonstração. Não está no Mercado Pago, não pode ser sacado e não representa dinheiro recebido.</p>
+<button class="btn" id="add">Adicionar R$ 1,00 de teste</button>
+<button class="btn secondary" id="reset">Zerar demonstração</button>
+</section>
+<section class="card">
+<h2>Por que não aparece no Mercado Pago?</h2>
+<p class="muted">O saldo real só pode ser alterado por uma operação reconhecida pelo Mercado Pago, como um recebimento legítimo ou uma transferência autorizada. Esta página não se conecta à conta, não envia transações e não guarda credenciais.</p>
+<p class="muted warning">Para testar integração real, use credenciais de teste oficiais do provedor e mantenha a interface de teste separada da conta financeira real.</p>
+</section>
+<script>
+let cents=1000;
+const fmt=n=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n/100);
+function draw(){$('balance').textContent=fmt(cents)}
+function $(id){return document.getElementById(id)}
+$('add').addEventListener('click',()=>{cents+=100;draw()});
+$('reset').addEventListener('click',()=>{cents=0;draw()});
+draw();
+</script>
+</body>
+</html>
