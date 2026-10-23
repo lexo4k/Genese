@@ -137,8 +137,41 @@ def clean_opportunities():
     return public_state()
 
 
+def _load_saved_opportunities():
+    """Restore indexed links after a process restart; never count them as income."""
+    db_init()
+    with sqlite3.connect(DB) as c:
+        rows = c.execute(
+            "SELECT url,title,source,summary,estimate_amount,estimate_currency,estimate_basis "
+            "FROM opportunities ORDER BY title COLLATE NOCASE"
+        ).fetchall()
+    restored = []
+    for url, title, source, summary, amount, currency, basis in rows:
+        restored.append({
+            "id": hashlib.sha256(url.encode()).hexdigest()[:16],
+            "title": title, "url": url, "source": source, "summary": summary,
+            "estimated_reward": None if amount is None else {
+                "amount": amount, "currency": currency, "basis": basis,
+                "label": "ESTIMATIVA, NÃO É RECEITA"
+            },
+            "estimate_label": basis or "Sem estimativa confiável; não inferir valores.",
+            "payment_status": "Não recebido / não verificado",
+            "next_step": "Conferir regras oficiais, requisitos e elegibilidade antes de participar."
+        })
+    return restored
+
+
 def public_state():
+    # A web service can restart; restore its saved catalogue rather than showing
+    # a misleading empty list until another network search is run.
     with LOCK:
+        if not SEARCH["results"] and not SEARCH["running"]:
+            try:
+                SEARCH["results"] = _load_saved_opportunities()
+                if SEARCH["results"] and not SEARCH["updated_at"]:
+                    SEARCH["message"] = "Catálogo restaurado do banco local; execute uma nova busca para atualizar."
+            except sqlite3.Error as exc:
+                SEARCH["error"] = [{"source": "banco local", "error": str(exc)}]
         return {**SEARCH, "results": list(SEARCH["results"]), "error": SEARCH["error"]}
 
 
