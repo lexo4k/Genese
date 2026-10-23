@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GÊNESE Pay | Protótipo do protocolo</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1020;--panel:#131b2e;--line:#293650;--text:#f4f7ff;--muted:#9eacc5;--accent:#62e6bd;--warn:#ffd580}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#17284a,var(--bg) 60%);color:var(--text);font:16px system-ui,sans-serif}
+main{max-width:920px;margin:auto;padding:24px 16px 60px}.top{display:flex;gap:14px;align-items:center}.logo{width:52px;height:52px;border-radius:16px;background:var(--accent);color:#08251d;display:grid;place-items:center;font-weight:900;font-size:24px}
+h1{font-size:clamp(26px,5vw,38px);margin:0}.muted{color:var(--muted)}.pill{display:inline-block;border:1px solid #80652d;color:var(--warn);padding:5px 10px;border-radius:99px;font-size:12px;margin-top:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-top:22px}.card{background:#131b2eec;border:1px solid var(--line);border-radius:18px;padding:18px}.label{color:var(--muted);font-size:13px}.balance{font-size:29px;font-weight:750;margin-top:5px}.unit{font-size:13px;color:var(--muted);font-weight:500}
+h2{font-size:18px;margin:0 0 14px}label{display:block;color:var(--muted);font-size:13px;margin:10px 0 6px}input,select{width:100%;background:#0b1222;color:var(--text);border:1px solid #344461;border-radius:10px;padding:12px;font:inherit}
+button{border:0;border-radius:11px;background:var(--accent);color:#06251c;padding:12px 15px;font-weight:750;font:inherit;cursor:pointer;width:100%;margin-top:12px}button.secondary{background:#25324b;color:var(--text);border:1px solid #3b4a65}.status{margin-top:12px;padding:12px;border-radius:10px;background:#0b1222;color:var(--muted);font-size:13px;overflow-wrap:anywhere}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{text-align:left;padding:10px 6px;border-bottom:1px solid var(--line)}th{color:var(--muted);font-weight:500}.positive{color:var(--accent)}.negative{color:#ff9c9c}.notice{margin-top:18px;border:1px solid #80652d;border-radius:14px;padding:14px;color:#ffe6ad;font-size:13px;line-height:1.5}
+</style></head>
+<body><main>
+<div class="top"><div class="logo">G</div><div><h1>GÊNESE Pay</h1><div class="muted">Protótipo do livro-razão e protocolo interno</div><span class="pill">MODO DEMONSTRAÇÃO · SEM DINHEIRO REAL</span></div></div>
+<div class="grid">
+<section class="card"><div class="label">Conta A · Operação</div><div class="balance" id="balA">0 <span class="unit">GEN de teste</span></div><div class="muted" id="idA" style="font-size:12px;margin-top:7px"></div></section>
+<section class="card"><div class="label">Conta B · Destinatário</div><div class="balance" id="balB">0 <span class="unit">GEN de teste</span></div><div class="muted" id="idB" style="font-size:12px;margin-top:7px"></div></section>
+<section class="card"><div class="label">Integridade do livro-razão</div><div class="balance" style="font-size:24px">Ativo</div><div class="muted" style="font-size:13px;margin-top:7px">Transferências internas debitam e creditam o mesmo valor. Nenhum valor é criado numa transferência.</div></section>
+</div>
+<div class="grid">
+<section class="card"><h2>1. Adicionar crédito de teste</h2><div class="muted" style="font-size:13px">Simula um crédito já confirmado por um provedor. É somente local e não tem valor de resgate.</div><label for="creditAmount">Quantidade de GEN</label><input id="creditAmount" type="number" min="1" max="100000" step="1" value="1000"><button id="creditBtn">Adicionar GEN de teste à Conta A</button><div class="status" id="creditStatus" role="status">Nenhum crédito foi registrado.</div></section>
+<section class="card"><h2>2. Transferir entre contas</h2><div class="muted" style="font-size:13px">A transferência falha se não houver saldo ou se os dados forem inválidos.</div><label for="amount">Quantidade de GEN</label><input id="amount" type="number" min="1" max="100000" step="1" value="250"><label for="recipient">Destinatário</label><select id="recipient"><option value="B">Conta B · Destinatário</option><option value="A">Conta A · Operação</option></select><button id="sendBtn">Executar transferência interna</button><div class="status" id="sendStatus" role="status">Nenhuma transferência executada.</div></section>
+</div>
+<section class="card" style="margin-top:14px"><h2>Histórico de eventos</h2><table><thead><tr><th>Evento</th><th>Conta</th><th>Valor</th><th>Referência</th></tr></thead><tbody id="history"><tr><td colspan="4" class="muted">Nenhum evento. Comece com um crédito de teste.</td></tr></tbody></table><button class="secondary" id="resetBtn">Reiniciar demonstração</button></section>
+<div class="notice"><strong>Limite importante:</strong> esta página é uma demonstração que roda no seu navegador e usa dados temporários. Ela não se conecta a bancos, não cria reais, não envia Pix e não prova liquidação. O módulo Python no repositório implementa o livro-razão persistente e testes. Para transferências Pix reais ainda será necessária uma integração autorizada, fundos confirmados, credenciais protegidas e validação de segurança.</div>
+</main>
+<script>
+const $=id=>document.getElementById(id);let a=0,b=0,events=[],seq=0;
+const idA="gen_demo_operacao",idB="gen_demo_destino";
+$("idA").textContent="ID: "+idA;$("idB").textContent="ID: "+idB;
+function render(){ $("balA").innerHTML=a+' <span class="unit">GEN de teste</span>';$("balB").innerHTML=b+' <span class="unit">GEN de teste</span>';
+$("history").innerHTML=events.length?events.slice().reverse().map(e=>'<tr><td>'+e.type+'</td><td>'+e.account+'</td><td class="'+(e.amount>0?'positive':'negative')+'">'+(e.amount>0?'+':'')+e.amount+'</td><td>'+e.ref+'</td></tr>').join(''):'<tr><td colspan="4" class="muted">Nenhum evento. Comece com um crédito de teste.</td></tr>';}
+$("creditBtn").onclick=()=>{const n=Number($("creditAmount").value);if(!Number.isSafeInteger(n)||n<=0||n>100000){$("creditStatus").textContent="Valor inválido. Informe um inteiro entre 1 e 100000.";return;}a+=n;events.push({type:"CRÉDITO DE TESTE",account:"Conta A",amount:n,ref:"demo-credit-"+(++seq)});$("creditStatus").textContent="Crédito de demonstração adicionado. Não é dinheiro real nem depósito bancário.";render();};
+$("sendBtn").onclick=()=>{const n=Number($("amount").value),to=$("recipient").value;if(!Number.isSafeInteger(n)||n<=0||n>100000){$("sendStatus").textContent="Valor inválido. Informe um inteiro entre 1 e 100000.";return;}if(to==="A"){$("sendStatus").textContent="Escolha uma conta de destino diferente da origem.";return;}if(a<n){$("sendStatus").textContent="Saldo insuficiente. Nenhum evento foi registrado.";return;}a-=n;b+=n;const ref="demo-transfer-"+(++seq);events.push({type:"DÉBITO",account:"Conta A",amount:-n,ref},{type:"CRÉDITO INTERNO",account:"Conta B",amount:n,ref});$("sendStatus").textContent="Transferência interna concluída na demonstração. Nenhum Pix externo foi enviado.";render();};
+$("resetBtn").onclick=()=>{a=0;b=0;events=[];seq=0;$("creditStatus").textContent="Demonstração reiniciada.";$("sendStatus").textContent="Nenhuma transferência executada.";render();};render();
+</script></body></html>
