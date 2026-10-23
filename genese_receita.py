@@ -190,6 +190,68 @@ def start_search():
     return {"ok": True, "started": True, **public_state()}
 
 
+def stripe_account_status():
+    """Read-only Stripe diagnostics. Never creates charges or initiates payouts."""
+    secret = os.getenv("STRIPE_SECRET_KEY", "").strip()
+    if not secret:
+        return {
+            "ok": True, "configured": False, "account_verified": False,
+            "payouts_enabled": False, "balance": None,
+            "status": "not_configured",
+            "note": "Configure STRIPE_SECRET_KEY as a secret in Render after completing Stripe onboarding."
+        }, 200
+    import base64
+    import urllib.error
+    import urllib.request
+
+    def stripe_get(path):
+        req = Request(
+            "https://api.stripe.com/v1/" + path,
+            headers={"Authorization": "Bearer " + secret, "Accept": "application/json"},
+            method="GET",
+        )
+        try:
+            with urlopen(req, timeout=12) as response:
+                return json.loads(response.read(1_000_000).decode("utf-8"))
+        except urllib.error.HTTPError as exc:
+            detail = exc.read(2000).decode("utf-8", "replace")
+            raise RuntimeError("Stripe API HTTP " + str(exc.code) + ": " + detail)
+
+    try:
+        account = stripe_get("account")
+        balance = stripe_get("balance")
+        available = [
+            {"amount_minor": item.get("amount", 0), "currency": item.get("currency", "").upper()}
+            for item in balance.get("available", [])
+        ]
+        pending = [
+            {"amount_minor": item.get("amount", 0), "currency": item.get("currency", "").upper()}
+            for item in balance.get("pending", [])
+        ]
+        settings = account.get("settings") or {}
+        payout_settings = settings.get("payouts") or {}
+        schedule = payout_settings.get("schedule") or {}
+        enabled = bool(account.get("payouts_enabled"))
+        details = bool(account.get("details_submitted"))
+        charges = bool(account.get("charges_enabled"))
+        return {
+            "ok": True, "configured": True, "account_id": account.get("id"),
+            "country": account.get("country"), "currency": account.get("default_currency"),
+            "details_submitted": details, "charges_enabled": charges,
+            "payouts_enabled": enabled,
+            "payout_schedule": {"interval": schedule.get("interval"), "delay_days": schedule.get("delay_days")},
+            "available_balance": available, "pending_balance": pending,
+            "status": "ready_for_payouts" if enabled else "onboarding_or_payouts_incomplete",
+            "note": "Somente leitura. A API não cria receita nem inicia repasses. Confirme a conta bancária e a programação de repasses no Dashboard da Stripe."
+        }, 200
+    except (OSError, ValueError, RuntimeError) as exc:
+        return {
+            "ok": False, "configured": True, "status": "provider_error",
+            "payouts_enabled": False, "error": str(exc),
+            "note": "Nenhum repasse foi iniciado."
+        }, 502
+
+
 def payment_summary():
     db_init()
     with sqlite3.connect(DB) as c:
@@ -258,14 +320,19 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/payments":
             self.send_json(payment_summary()); return
         if path == "/api/receita":
+            stripe_key = bool(os.getenv("STRIPE_SECRET_KEY"))
             mp_token = bool(os.getenv("MERCADOPAGO_ACCESS_TOKEN"))
             mp_secret = bool(os.getenv("MERCADOPAGO_WEBHOOK_SECRET") or os.getenv("GENESE_PAYMENT_WEBHOOK_SECRET"))
             self.send_json({"ok": True, "revenue_source_connected": False, "automatic_payout_enabled": False, "checks": [
                 {"key": "revenue_source", "ok": False, "label": "Fonte de receita", "detail": "Nenhuma fonte pagadora está conectada; o catálogo de oportunidades apenas lista links públicos."},
                 {"key": "mp_access_token", "ok": mp_token, "label": "Token do Mercado Pago", "detail": "Configurado no servidor." if mp_token else "Falta configurar MERCADOPAGO_ACCESS_TOKEN no Render."},
                 {"key": "mp_webhook_secret", "ok": mp_secret, "label": "Assinatura do webhook", "detail": "Configurada no servidor." if mp_secret else "Falta configurar MERCADOPAGO_WEBHOOK_SECRET no Render."},
-                {"key": "automatic_payout", "ok": False, "label": "Repasse automático", "detail": "Desativado: o código atual confirma pagamentos recebidos, mas não transfere rendimentos de plataformas externas."}
+                {"key": "stripe_key", "ok": stripe_key, "label": "Chave Stripe", "detail": "Segredo configurado; consulte /api/stripe/status para verificar a conta." if stripe_key else "Falta configurar STRIPE_SECRET_KEY como segredo no Render."},
+                {"key": "automatic_payout", "ok": False, "label": "Repasse automático", "detail": "Não é iniciado por este servidor. O estado da conta Stripe é somente leitura; programe repasses no Dashboard da Stripe."}
             ]}); return
+        if path == "/api/stripe/status":
+            result, code = stripe_account_status()
+            self.send_json(result, code); return
         if path == "/api/binance":
             owner_token = os.getenv("GENESE_OWNER_TOKEN", "")
             supplied = self.headers.get("Authorization", "")
