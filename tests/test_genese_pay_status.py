@@ -48,6 +48,19 @@ class GenesePayStatusTests(unittest.TestCase):
             self.assertIn('"revenue_source_connected": False', source)
             self.assertIn('"automatic_payout_enabled": False', source)
 
+    def test_saved_opportunities_are_restored_after_process_state_reset(self):
+        url = "https://example.org/program"
+        with __import__("sqlite3").connect(self.db) as conn:
+            conn.execute(
+                "INSERT INTO opportunities(url,title,source,summary,found_at) VALUES(?,?,?,?,?)",
+                (url, "Programa público", "Fonte de teste", "Descrição", "2026-01-01T00:00:00+00:00"),
+            )
+        genese_receita.SEARCH.update(results=[], running=False, updated_at=None)
+        state = genese_receita.public_state()
+        self.assertEqual(len(state["results"]), 1)
+        self.assertEqual(state["results"][0]["url"], url)
+        self.assertEqual(state["results"][0]["payment_status"], "Não recebido / não verificado")
+
     def test_payment_table_is_empty_until_verified_webhook(self):
         with self.db.open("rb"):
             pass
