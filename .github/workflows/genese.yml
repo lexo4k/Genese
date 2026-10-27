@@ -124,5 +124,6 @@ jobs:
             genese_oportunidades_stdout.json
             genese_contratantes.json
             genese_contratantes_stdout.json
+            genese_pipeline_report.json
           if-no-files-found: warn
           retention-days: 14
