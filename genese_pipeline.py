@@ -19,12 +19,18 @@ def classify(item: dict[str, Any]) -> dict[str, Any]:
     row = dict(item)
     url = str(row.get("url") or row.get("url_oficial") or "")
     title = str(row.get("programa") or row.get("titulo") or row.get("title") or "Oportunidade sem título")
-    explicit_eligibility = row.get("eligibility_verified") is True or row.get("requisitos_verificados") is True
-    explicit_deadline = row.get("deadline_verified") is True
-    explicit_payment_terms = row.get("payment_terms_verified") is True
-    explicit_payout = row.get("payment_confirmed") is True or row.get("pagamento_confirmado") is True
-    accepted_work = row.get("work_accepted") is True
-    received = row.get("funds_received") is True
+    provider_evidence = str(row.get("provider_evidence_url") or "")
+    provider_verified = row.get("provider_verified") is True and provider_evidence.startswith("https://")
+    amount_valid = isinstance(row.get("received_amount"), (int, float)) and not isinstance(row.get("received_amount"), bool) and row.get("received_amount") >= 0
+    currency_valid = isinstance(row.get("received_currency"), str) and len(row.get("received_currency").strip()) == 3
+    transaction_valid = bool(str(row.get("transaction_id") or "").strip())
+    official_evidence = str(row.get("official_evidence_url") or "")
+    explicit_eligibility = (row.get("eligibility_verified") is True or row.get("requisitos_verificados") is True) and official_evidence.startswith("https://")
+    explicit_deadline = row.get("deadline_verified") is True and official_evidence.startswith("https://")
+    explicit_payment_terms = row.get("payment_terms_verified") is True and official_evidence.startswith("https://")
+    explicit_payout = (row.get("payment_confirmed") is True or row.get("pagamento_confirmado") is True) and provider_verified and transaction_valid
+    accepted_work = row.get("work_accepted") is True and official_evidence.startswith("https://")
+    received = row.get("funds_received") is True and provider_verified and transaction_valid and amount_valid and currency_valid
 
     if received:
         status = "dinheiro_recebido"
@@ -47,7 +53,9 @@ def classify(item: dict[str, Any]) -> dict[str, Any]:
         "trabalho_aceito": accepted_work,
         "pagamento_confirmado": explicit_payout,
         "dinheiro_recebido": received,
-        "receita_contabilizavel": bool(received and isinstance(row.get("received_amount"), (int, float)) and row.get("received_amount") >= 0 and row.get("received_currency")),
+        "evidencia_oficial_verificada": official_evidence.startswith("https://"),
+        "evidencia_pagador_verificada": provider_verified and transaction_valid,
+        "receita_contabilizavel": bool(received and amount_valid and currency_valid),
         "proximo_passo": _next_step(status),
         "aviso": "A listagem ou contagem de buscas não é receita. Confirme as regras na fonte oficial.",
     })
