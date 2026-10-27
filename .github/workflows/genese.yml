@@ -29,7 +29,7 @@ jobs:
           python-version: "3.12"
 
       - name: Validar sintaxe
-        run: python -m py_compile genese_ledger.py genese_autonomo.py priorizador_recompensas.py contratantes_publicos.py genese_pay_core.py nicehash_readonly.py genese_miner_runtime.py genese_dashboard.py genese_receita.py mercadopago_payouts.py mercadopago_webhook.py binance_readonly.py
+        run: python -m py_compile genese_ledger.py genese_autonomo.py priorizador_recompensas.py contratantes_publicos.py genese_pay_core.py nicehash_readonly.py genese_miner_runtime.py genese_dashboard.py genese_receita.py genese_pipeline.py mercadopago_payouts.py mercadopago_webhook.py binance_readonly.py
 
       - name: Testes unitários
         run: python -m unittest discover -s tests -v
@@ -61,6 +61,20 @@ jobs:
           PY
           fi
           exit "$code"
+
+      - name: Classificar oportunidades sem presumir receita
+        if: always()
+        run: |
+          python genese_pipeline.py --input genese_oportunidades.json --output genese_pipeline_report.json
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          p=json.load(open("genese_pipeline_report.json", encoding="utf-8"))
+          print(f"- Itens classificados: {p.get('items_reviewed', 0)}")
+          print(f"- Recebimentos comprovados no relatório: {p.get('confirmed_received_count', 0)}")
+          print(f"- Totais por moeda: {p.get('confirmed_received_totals_by_currency', {})}")
+          print("- Varredura ativa de alvos: não")
+          print("- Envios/transferências automáticas: não")
+          PY
 
       - name: Coletar vagas públicas de contratantes
         shell: bash
