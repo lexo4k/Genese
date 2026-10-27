@@ -28,8 +28,8 @@ class PipelineTests(unittest.TestCase):
 
     def test_only_explicit_received_amount_counts(self):
         report = build_report([
-            {"url": "https://example.org/a", "funds_received": True, "received_amount": 12.5, "received_currency": "BRL"},
-            {"url": "https://example.org/b", "funds_received": True},
+            {"url": "https://example.org/a", "funds_received": True, "provider_verified": True, "provider_evidence_url": "https://provider.example/tx/1", "transaction_id": "tx-1", "received_amount": 12.5, "received_currency": "BRL"},
+            {"url": "https://example.org/b", "funds_received": True, "received_amount": 999, "received_currency": "BRL"},
             {"url": "https://example.org/c", "relevancia": 100},
         ])
         self.assertEqual(report["confirmed_received_totals_by_currency"], {"BRL": 12.5})
