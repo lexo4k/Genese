@@ -14,6 +14,7 @@ class PipelineTests(unittest.TestCase):
         row = classify({
             "programa": "Example work",
             "url": "https://example.org/work",
+            "official_evidence_url": "https://example.org/terms",
             "requisitos_verificados": True,
             "deadline_verified": True,
             "payment_terms_verified": True,
@@ -22,7 +23,7 @@ class PipelineTests(unittest.TestCase):
         self.assertFalse(row["receita_contabilizavel"])
 
     def test_accepted_work_is_pending_not_received(self):
-        row = classify({"url": "https://example.org", "work_accepted": True})
+        row = classify({"url": "https://example.org", "official_evidence_url": "https://example.org/acceptance", "work_accepted": True})
         self.assertEqual(row["status_pipeline"], "trabalho_aceito_pagamento_pendente")
         self.assertFalse(row["receita_contabilizavel"])
 
