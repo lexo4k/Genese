@@ -1,17 +1,12 @@
 {
-  "name": "TelaViva - Entretenimento gratuito",
+  "name": "TelaViva - Streaming",
   "short_name": "TelaViva",
-  "description": "Central gratuita de descoberta de entretenimento em fontes oficiais.",
+  "description": "Experiência de streaming com catálogo e fontes autorizadas.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#090d18",
-  "theme_color": "#090d18",
-  "orientation": "any",
-  "categories": [
-    "entertainment",
-    "video"
-  ],
+  "background_color": "#080a10",
+  "theme_color": "#080a10",
   "icons": [
     {
       "src": "icon.svg",
