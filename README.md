@@ -1,39 +1,32 @@
 # TelaViva
 
-Central gratuita de descoberta de entretenimento para navegador, Android via PWA e uso em navegadores de TV.
+Experiência de streaming em formato de catálogo, com interface cinematográfica, perfis locais, Minha lista, detalhes, progresso preparado e player HTML5.
 
-## O que está implementado
-- Interface responsiva para celular, computador e telas grandes.
-- Catálogo de descoberta separado em filmes, séries, esportes e ao vivo.
-- Pesquisa em português e filtros por categoria.
-- Favoritos salvos localmente no navegador.
-- Atalhos para Pluto TV, Plex e YouTube.
-- Instalação PWA quando o navegador oferece suporte.
-- Cache do aplicativo para abrir a interface sem conexão depois da primeira visita.
-- Navegação por teclado e setas, útil em teclados e controles remotos compatíveis.
-- Indicador de conectividade e mensagens acessíveis.
-- Verificação automática de sintaxe e estrutura pelo GitHub Actions.
+## Implementado
+- Interface inspirada em plataformas de streaming, destaque e catálogo em cartões.
+- Categorias: filmes, séries, esportes e ao vivo.
+- Pesquisa, detalhes, favoritos e perfis locais.
+- Seção Continuar assistindo preparada para progresso de players autorizados.
+- Player HTML5 preparado para fontes de mídia autorizadas e compatíveis.
+- PWA instalável em navegadores compatíveis e cache offline da interface.
 
-## Abrir
-Hospede os arquivos em qualquer hospedagem estática HTTPS. Para testar localmente:
+## Direitos e reprodução
+Os títulos atuais são demonstrações visuais. Não há filmes, episódios ou jogos licenciados embutidos. O player não inventa URLs nem extrai streams de serviços terceiros. Para ativar reprodução real, cada item precisa de uma URL de mídia fornecida pelo titular/licenciante, ou integração oficial autorizada com permissões e termos do provedor. DRM, autenticação e georrestrições devem ser respeitados. Pluto TV, Plex e YouTube são links externos, não prova de autorização para incorporar seus players.
 
-```bash
-python -m http.server 8080
-```
+## Perfis e dados
+Perfis, lista e progresso ficam no armazenamento local do navegador/dispositivo. Não há login, sincronização em nuvem ou backend nesta entrega.
 
-Abra `http://localhost:8080`. O service worker exige HTTPS, exceto em localhost.
+## Executar localmente
+`python -m http.server 8080` e abrir http://localhost:8080. Service worker exige HTTPS, exceto localhost.
 
-## Serviços e direitos
-TelaViva é um diretório/central de descoberta. Não hospeda, grava, desbloqueia ou retransmite filmes, séries, canais ou partidas. Os cartões são atalhos para serviços externos, não garantem que um título ou evento esteja disponível. Cada plataforma controla catálogo, região, publicidade, login e direitos de transmissão. Só devem ser adicionadas fontes oficiais ou licenciadas.
+## Android / Android TV
+Instalação PWA em navegadores compatíveis. Ainda não é APK nativo nem app publicado na Play Store/Android TV.
 
-## Android e Android TV
-No Android, instale pelo aviso do navegador ou pelo menu “Instalar aplicativo/Adicionar à tela inicial”. Em Android TV, abra a URL em um navegador compatível. A navegação por setas/Enter funciona quando o navegador da TV envia eventos de teclado. Esta entrega ainda não é um APK nativo nem um app publicado na Play Store.
+## Próxima etapa de produção
+1. Obter licenças e selecionar APIs/players oficiais que autorizem distribuição/embeds.
+2. Ingerir metadados e artes por API com chave guardada no backend. TMDB fornece metadados, não direitos de reprodução.
+3. Criar backend de contas, perfis, sincronização, catálogo editorial e histórico.
+4. Integrar provedores de vídeo, CDN, autenticação e DRM conforme contratos.
+5. Testar em dispositivos reais e publicar APK/Android TV após implementação nativa.
 
-## Publicação
-O workflow em `.github/workflows/quality.yml` verifica os arquivos a cada push e pull request. O workflow `pages.yml` publica no GitHub Pages quando a opção Pages estiver habilitada para o repositório com origem GitHub Actions.
-
-## Limites desta versão
-- Não há player próprio nem feed de programação ao vivo.
-- Não há API de catálogo integrada porque os serviços precisam autorizar acesso e incorporação.
-- Favoritos ficam neste navegador/dispositivo e não sincronizam entre aparelhos.
-- A interface funciona offline, mas os vídeos e serviços externos precisam de internet.
+Nunca publicar streams, chaves privadas ou credenciais no repositório.
