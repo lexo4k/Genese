@@ -8,7 +8,8 @@ Aplicação web progressiva (PWA) com experiência de navegação inspirada em s
 - Ordenação alfabética e recomendada.
 - Identificação visual de conteúdo reproduzível versus prévias demonstrativas.
 - Detalhes de título, favoritos e perfis locais separados por perfil.
-- Player incorporado oficial do YouTube para Big Buck Bunny, com opção de tela cheia quando suportada.
+- Player oficial do YouTube para Big Buck Bunny, com tela cheia, tratamento de falhas e link alternativo para abrir a fonte.
+- Retomada de reprodução via YouTube IFrame API, com salvamento periódico do ponto assistido.
 - Retomada de progresso preparada para fontes HTML5 próprias autorizadas.
 - PWA instalável em navegadores compatíveis e cache offline da interface.
 
@@ -19,7 +20,7 @@ Para adicionar títulos reais, cada item precisa de arquivo de mídia/URL fornec
 
 ## Limitações atuais
 - Perfis, favoritos e progresso são locais ao navegador/dispositivo; não existe login nem sincronização na nuvem.
-- A incorporação do YouTube pode estar sujeita a restrições do titular, disponibilidade regional e políticas da plataforma.
+- A incorporação do YouTube pode estar sujeita a restrições do titular, disponibilidade regional e políticas da plataforma. A retomada depende de a API oficial carregar e permitir a reprodução.
 - Não há backend, catálogo remoto, recomendações algorítmicas, controle parental, CDN, DRM próprio ou painel administrativo.
 - É uma PWA, não um APK nativo nem um app Android TV publicado.
 
