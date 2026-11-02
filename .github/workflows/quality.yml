@@ -1,0 +1,29 @@
+name: TelaViva quality checks
+on:
+  push:
+    branches: ["Lexo/NutriFit"]
+  pull_request:
+    branches: ["Lexo/NutriFit"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Validate JavaScript syntax
+        run: node --check app.js
+      - name: Validate manifest JSON
+        run: python -m json.tool manifest.webmanifest > /dev/null
+      - name: Check required app files and routes
+        run: |
+          test -s index.html
+          test -s styles.css
+          test -s app.js
+          test -s service-worker.js
+          grep -q 'id="cards"' index.html
+          grep -q 'id="search"' index.html
+          grep -q 'data-view="favoritos"' index.html
+          grep -q 'telaviva-shell-v2' service-worker.js
