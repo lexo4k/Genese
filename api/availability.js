@@ -4,7 +4,7 @@ module.exports = async function handler(req, res) {
   if (req.method !== "GET") return res.status(405).json({ error: "Método não permitido" });
   const id = String(req.query.id || "").trim();
   const type = req.query.type === "tv" ? "show" : "movie";
-  if (!/^\\d{1,12}$/.test(id)) return res.status(400).json({ error: "ID TMDB inválido." });
+  if (!/^[0-9]{1,12}$/.test(id)) return res.status(400).json({ error: "ID TMDB inválido." });
   const token = process.env.JUSTWATCH_PARTNER_TOKEN;
   if (!token) return res.status(200).json({ configured: false, provider: "JustWatch", offers: [], message: "A consulta de disponibilidade exige contrato e token de parceiro JustWatch." });
   try {
