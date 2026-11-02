@@ -18,10 +18,25 @@ Big Buck Bunny é um filme aberto da Blender Foundation, sob licença Creative C
 Os demais cartões são prévias demonstrativas e não representam filmes, séries ou eventos disponíveis para reprodução. Pluto TV e Plex são links externos, não integrações de reprodução dentro deste app. O projeto não extrai streams de serviços terceiros.
 Para adicionar títulos reais, cada item precisa de arquivo de mídia/URL fornecido pelo titular ou uma integração oficial autorizada. Metadados e pôsteres não concedem direitos de exibição. Respeitar DRM, autenticação, georrestrições, atribuição e termos de cada provedor.
 
+## Integrações oficiais e configuração
+
+O backend Vercel inclui endpoints server-side para:
+- `/api/search?q=...`: pesquisa de filmes e séries no TMDB, com conteúdo adulto excluído. Retorna apenas metadados e imagens; não fornece arquivos de vídeo nem direitos de reprodução.
+- `/api/availability?id=...&type=movie|tv`: consulta ofertas no Brasil pela JustWatch Partner API e só funciona com token de parceiro.
+- `/api/integrations`: informa quais credenciais e fontes estão realmente configuradas.
+
+Configure no painel do projeto Vercel, em Environment Variables, sem publicar os valores no Git:
+- `TMDB_READ_ACCESS_TOKEN`: token de leitura do TMDB. Para uso comercial, é necessária autorização/licença comercial do TMDB. A chave de desenvolvedor gratuita não deve ser presumida como licença comercial.
+- `JUSTWATCH_PARTNER_TOKEN`: token emitido após contrato com a JustWatch.
+
+A API do Prime Video é destinada atualmente a parceiros gerenciados. A integração de reprodução direta do Plex depende de identificação, credenciais, acordo e requisitos técnicos fornecidos pelo próprio Plex. Esses serviços permanecem corretamente marcados como pendentes até que o acesso seja concedido. Não há reprodução direta de Netflix, Disney+, Prime Video, Plex ou Pluto TV neste projeto sem integração autorizada do respectivo provedor.
+
+Atribuição TMDB obrigatória quando a integração estiver ativa: “This product uses the TMDB API but is not endorsed or certified by TMDB.” Consulte os termos e requisitos de marca do TMDB antes de ativar uso comercial.
+
 ## Limitações atuais
 - Perfis, favoritos e progresso são locais ao navegador/dispositivo; não existe login nem sincronização na nuvem.
 - A incorporação do YouTube pode estar sujeita a restrições do titular, disponibilidade regional e políticas da plataforma. A retomada depende de a API oficial carregar e permitir a reprodução.
-- Não há backend, catálogo remoto, recomendações algorítmicas, controle parental, CDN, DRM próprio ou painel administrativo.
+- Ainda não há contas na nuvem, sincronização de perfis, recomendações algorítmicas, controle parental, CDN próprio, DRM próprio ou painel administrativo.
 - É uma PWA, não um APK nativo nem um app Android TV publicado.
 
 ## Desenvolvimento local
@@ -30,7 +45,7 @@ Execute `python -m http.server 8080` e abra `http://localhost:8080`. Service wor
 ## Próximas etapas de produção
 1. Contratar/obter licenças e definir provedores de conteúdo com permissão de reprodução.
 2. Criar backend de contas, perfis, catálogo editorial e sincronização.
-3. Integrar API de metadados e imagens com chaves protegidas no servidor.
+3. Configurar credenciais TMDB/JustWatch autorizadas no Vercel e validar os contratos/termos comerciais.
 4. Implementar reprodução adaptativa, legendas, múltiplas faixas de áudio, DRM e CDN conforme contratos.
 5. Criar apps nativos Android/Android TV, testes em aparelhos e publicação nas lojas.
 
