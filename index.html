@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#090d18">
+  <meta name="description" content="TelaViva: sua central gratuita de entretenimento.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <title>TelaViva | Entretenimento sem limites</title>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="TelaViva início"><span class="brand-mark">▶</span><span>Tela<span>Viva</span></span></a>
+    <nav class="main-nav" aria-label="Navegação principal">
+      <button class="nav-link active" data-view="inicio">Início</button>
+      <button class="nav-link" data-view="filmes">Filmes</button>
+      <button class="nav-link" data-view="series">Séries</button>
+      <button class="nav-link" data-view="esportes">Esportes</button>
+      <button class="nav-link" data-view="ao-vivo">Ao vivo</button>
+      <button class="nav-link" data-view="favoritos">Minha lista</button>
+    </nav>
+    <label class="search"><span>⌕</span><input id="search" type="search" placeholder="Buscar conteúdo..." aria-label="Buscar conteúdo"></label>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-copy">
+        <span class="eyebrow">SEU ENTRETENIMENTO, EM UM SÓ LUGAR</span>
+        <h1>Uma tela.<br><em>Mil histórias.</em></h1>
+        <p>Filmes, séries, esportes e transmissões gratuitas em fontes oficiais.</p>
+        <button class="primary" data-scroll="catalogo">Explorar catálogo <span>→</span></button>
+      </div>
+      <div class="hero-art" aria-hidden="true"><div class="orb orb-one"></div><div class="orb orb-two"></div><div class="screen-shape">▶</div><span class="art-label">TELAVIVA ORIGINAL</span></div>
+    </section>
+
+    <section class="trust-strip">
+      <span>✦ 100% gratuito</span><span>◉ Fontes oficiais</span><span>▣ Celular, web e TV</span><span>♡ Sua lista pessoal</span>
+    </section>
+
+    <section class="section" id="catalogo">
+      <div class="section-heading"><div><span class="eyebrow">DESCUBRA</span><h2 id="section-title">Explore o TelaViva</h2></div><span class="result-count" id="result-count"></span></div>
+      <div class="filters" role="group" aria-label="Filtrar catálogo">
+        <button class="filter active" data-filter="todos">Tudo</button>
+        <button class="filter" data-filter="filmes">Filmes</button>
+        <button class="filter" data-filter="series">Séries</button>
+        <button class="filter" data-filter="esportes">Esportes</button>
+        <button class="filter" data-filter="ao-vivo">Ao vivo</button>
+      </div>
+      <div class="catalog-grid" id="cards" aria-live="polite"></div>
+    </section>
+
+    <section class="section providers">
+      <div class="section-heading"><div><span class="eyebrow">ASSISTA DE GRAÇA</span><h2>Fontes oficiais</h2></div></div>
+      <p class="section-intro">Acesse serviços que oferecem programação gratuita. O catálogo e a disponibilidade podem variar por região e horário.</p>
+      <div class="provider-grid">
+        <a class="provider-card" href="https://pluto.tv/br" target="_blank" rel="noopener noreferrer"><span class="provider-logo pluto">PLUTO<span>TV</span></span><strong>Pluto TV</strong><small>Canais e conteúdo sob demanda</small><span class="external">Abrir serviço ↗</span></a>
+        <a class="provider-card" href="https://watch.plex.tv/" target="_blank" rel="noopener noreferrer"><span class="provider-logo plex">PLEX</span><strong>Plex</strong><small>Filmes, séries e canais gratuitos</small><span class="external">Abrir serviço ↗</span></a>
+        <a class="provider-card" href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer"><span class="provider-logo youtube">▶</span><strong>YouTube</strong><small>Canais oficiais e transmissões autorizadas</small><span class="external">Abrir serviço ↗</span></a>
+      </div>
+    </section>
+  </main>
+
+  <footer><a class="brand" href="#"><span class="brand-mark">▶</span><span>Tela<span>Viva</span></span></a><p>Entretenimento gratuito, com respeito aos criadores e aos direitos de transmissão.</p><small>© 2026 TelaViva · Projeto em desenvolvimento</small></footer>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>
