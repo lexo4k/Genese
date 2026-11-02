@@ -22,3 +22,5 @@
 @media(max-width:1000px){.main-nav{overflow-x:auto;flex-wrap:nowrap;padding-bottom:5px}.main-nav::-webkit-scrollbar{height:3px}}
 @media(max-width:680px){.sort-control{margin-left:0;width:100%;justify-content:space-between}.sort-control select{flex:1}.player-top{padding-right:42px}.player-actions{gap:6px}.player-fullscreen{font-size:10px;padding:7px}}
 @media(prefers-reduced-motion:reduce){.content-card{transition:none}.content-card:hover{transform:none}}
+
+#player-media video[hidden]{display:none!important}
