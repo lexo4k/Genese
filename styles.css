@@ -36,3 +36,5 @@
 .integration-ready,.integration-pending{font-size:10px;letter-spacing:.04em;text-transform:uppercase}
 .integration-ready{color:#80d9a4}.integration-pending{color:#e7bd76}
 .availability-link{display:inline-flex;align-items:center;margin:10px 8px 0 0;text-decoration:none}
+
+.local-library .section-heading{align-items:center;gap:12px}.local-library .primary{white-space:nowrap;background:#e50914;color:#fff}.local-library .rail:empty{display:none}@media(max-width:480px){.local-library .section-heading{align-items:flex-start;flex-direction:column}.local-library .primary{width:100%}}
