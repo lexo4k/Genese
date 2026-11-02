@@ -24,3 +24,5 @@
 @media(prefers-reduced-motion:reduce){.content-card{transition:none}.content-card:hover{transform:none}}
 
 #player-media video[hidden]{display:none!important}
+
+.poster{background-size:cover;background-position:center}.modal-art{background-size:cover!important;background-position:center!important}
