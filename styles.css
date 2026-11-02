@@ -30,3 +30,9 @@
 .skip-link{position:fixed;left:12px;top:-60px;z-index:100;background:#fff;color:#111;padding:10px 14px;border-radius:5px;font-weight:800}.skip-link:focus{top:12px}#yt-player{width:100%;aspect-ratio:16/9;min-height:220px;background:#000}#yt-player iframe{width:100%;height:100%;min-height:220px;border:0}.modal-info .primary{cursor:pointer}@media(max-width:680px){#yt-player,#yt-player iframe{min-height:210px}}
 
 .search-status{min-height:18px;margin:8px 0 12px;color:#9eb9d0;font-size:11px;line-height:1.5}.search-status:empty{display:none}
+.integration-status{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-top:16px}
+.integration-item{display:flex;flex-direction:column;gap:6px;padding:14px;border:1px solid #ffffff18;border-radius:12px;background:#ffffff08}
+.integration-item strong{font-size:13px}.integration-item small{color:#9ca8b8;font-size:11px;line-height:1.5}
+.integration-ready,.integration-pending{font-size:10px;letter-spacing:.04em;text-transform:uppercase}
+.integration-ready{color:#80d9a4}.integration-pending{color:#e7bd76}
+.availability-link{display:inline-flex;align-items:center;margin:10px 8px 0 0;text-decoration:none}
