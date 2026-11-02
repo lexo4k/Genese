@@ -7,11 +7,11 @@ Experiência de streaming em formato de catálogo, com interface cinematográfic
 - Categorias: filmes, séries, esportes e ao vivo.
 - Pesquisa, detalhes, favoritos e perfis locais.
 - Seção Continuar assistindo preparada para progresso de players autorizados.
-- Player HTML5 preparado para fontes de mídia autorizadas e compatíveis.
+- Player com incorporação oficial do YouTube para o filme aberto Big Buck Bunny (Blender Foundation), além de player HTML5 para fontes próprias autorizadas.
 - PWA instalável em navegadores compatíveis e cache offline da interface.
 
 ## Direitos e reprodução
-Os títulos atuais são demonstrações visuais. Não há filmes, episódios ou jogos licenciados embutidos. O player não inventa URLs nem extrai streams de serviços terceiros. Para ativar reprodução real, cada item precisa de uma URL de mídia fornecida pelo titular/licenciante, ou integração oficial autorizada com permissões e termos do provedor. DRM, autenticação e georrestrições devem ser respeitados. Pluto TV, Plex e YouTube são links externos, não prova de autorização para incorporar seus players.
+O catálogo inclui Big Buck Bunny, filme aberto da Blender Foundation sob Creative Commons Attribution 3.0, reproduzido pelo player oficial incorporado do YouTube. Atribuição: © 2008 Blender Foundation / www.bigbuckbunny.org. Os demais cartões continuam demonstrativos. O player não extrai streams de serviços terceiros. Para ativar reprodução real, cada item precisa de uma URL de mídia fornecida pelo titular/licenciante, ou integração oficial autorizada com permissões e termos do provedor. DRM, autenticação e georrestrições devem ser respeitados. Pluto TV e Plex são links externos, não prova de autorização para incorporar seus players. O vídeo Big Buck Bunny usa incorporação padrão do YouTube e respeita a disponibilidade definida pelo titular.
 
 ## Perfis e dados
 Perfis, lista e progresso ficam no armazenamento local do navegador/dispositivo. Não há login, sincronização em nuvem ou backend nesta entrega.
