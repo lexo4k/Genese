@@ -8,7 +8,7 @@ Aplicação web progressiva (PWA) com experiência de navegação inspirada em s
 - Ordenação alfabética e recomendada.
 - Identificação visual de conteúdo reproduzível versus prévias demonstrativas.
 - Detalhes de título, favoritos e perfis locais separados por perfil.
-- Player oficial do YouTube para Big Buck Bunny, com tela cheia, tratamento de falhas e link alternativo para abrir a fonte.
+- Player oficial do YouTube para Big Buck Bunny, Sintel, Tears of Steel e episódios 2 e 3 de Caminandes, com tela cheia, tratamento de falhas e link alternativo para abrir a fonte.
 - Retomada de reprodução via YouTube IFrame API, com salvamento periódico do ponto assistido.
 - Retomada de progresso preparada para fontes HTML5 próprias autorizadas.
 - PWA instalável em navegadores compatíveis e cache offline da interface.
